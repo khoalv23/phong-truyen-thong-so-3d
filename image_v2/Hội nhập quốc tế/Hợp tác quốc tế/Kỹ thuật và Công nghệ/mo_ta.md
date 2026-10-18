@@ -1,0 +1,4 @@
+IMG_01.jpg - Trại hè Thanh Đảo Trung Quốc Đợt 1 - 21/07/2026 - Đại học Hoàng Hải Thanh Đảo - Trung Quốc. IMG_02.jpg - Buổi gặp mặt đầu tiên với sinh viên và thầy côĐại học Hoàng Hải Thanh Đảo - Tháng 7/2026; IMG_03.jpg - Buổi học tập về ngôn ngữ Trung Quốc - Tháng 7/2026 - Đại học Hoàng Hải Thanh Đảo;
+IMG_04.jpg - Học tập và giao lưu văn hóa Trung Quốc - Đại học Hoàng Hải Thanh Đảo;
+IMG_05.jpg - Học tập và trải nghiệm thiên nhiên văn hóa Trung Quốc - Tháng 7/2026 - Đại học Hoàng Hải Thanh Đảo;
+IMG_06.jpg - Lễ trao giấy chứng nhận tham gia Trại hè Trung Quốc - Việt Nam - Tháng 7/2026 - Đại học Hoàng Hải Thanh Đảo - Trung Quốc.

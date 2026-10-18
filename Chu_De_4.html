@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Chủ đề 4: Hội nhập - Sáng tạo - Tiên phong. Phòng Truyền thống số 3D." />
+  <title>Chủ đề 4: Hội nhập – Sáng tạo – Tiên phong</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/chu-de-4.css">
+</head>
+
+<body>
+  <section id="room-loading-screen" class="room-loading-screen" aria-live="polite" aria-busy="true">
+    <div class="loading-atmosphere" aria-hidden="true"></div>
+    <div class="loading-shell">
+      <header class="loading-header">
+        <div class="loading-brand">
+          <img src="./image/HNUE_logo.png" alt="" class="loading-logo">
+          <div>
+            <p class="loading-eyebrow">KHÔNG GIAN TRUYỀN THỐNG SỐ - HNUE</p>
+            <h1>HỘI NHẬP - SÁNG TẠO - TIÊN PHONG</h1>
+            <p class="loading-title-en">INTEGRATION - INNOVATION - PIONEERING</p>
+          </div>
+        </div>
+        <span class="loading-theme-number">04</span>
+      </header>
+      <div class="loading-divider" aria-hidden="true"><span></span></div>
+      <div class="loading-introduction">
+        <article lang="vi" id="loading-intro-vi">
+          <p class="loading-language">LỜI DẪN TỔNG QUÁT</p>
+          <p>Chào mừng quý vị đến với Chủ đề 4: <strong>Hội nhập – Sáng tạo – Tiên phong</strong>.</p>
+          <p>Không gian trưng bày giới thiệu hành trình của các thế hệ đoàn viên, thanh niên Trường Đại học Sư phạm Hà Nội qua ba mạch nội dung: chuyển đổi số trong công tác Đoàn; đổi mới sáng tạo, khởi nghiệp; và hợp tác, hội nhập quốc tế.</p>
+          <p>Xin kính mời quý vị theo lối chỉ dẫn và bắt đầu hành trình khám phá.</p>
+        </article>
+        <article lang="en" id="loading-intro-en">
+          <p class="loading-language">GENERAL INTRODUCTION</p>
+          <p>Welcome to Theme 4: <strong>Integration – Innovation – Pioneering</strong>.</p>
+          <p>This exhibition presents the journey of generations of Hanoi National University of Education students and Youth Union members through three themes: digital transformation in Youth Union activities; innovation and entrepreneurship; and international cooperation and integration.</p>
+          <p>Please follow the designated route and begin your journey of discovery.</p>
+        </article>
+      </div>
+      <footer class="loading-progress-wrap">
+        <div class="loading-progress-track" aria-hidden="true"><span></span></div>
+        <div class="loading-status-row">
+          <span id="room-loading-status">Đang chuẩn bị không gian trưng bày 3D…</span>
+          <span>Preparing the 3D exhibition…</span>
+        </div>
+        <button id="enter-room-button" class="enter-room-button" type="button" disabled>
+          <span>VÀO PHÒNG</span>
+          <small>ENTER EXHIBITION</small>
+          <i aria-hidden="true">→</i>
+        </button>
+      </footer>
+    </div>
+  </section>
+
+  <section id="museum-3d-overlay" class="museum3d-overlay" aria-label="Không gian bảo tàng 3D">
+    <canvas id="museum-3d-canvas"></canvas>
+    <div class="museum3d-panel">
+      <div class="museum-map-wrap">
+        <div class="museum-map-title">Bản đồ</div>
+        <div class="museum-map" aria-label="Bản đồ định vị trong phòng trưng bày">
+          <svg id="map-svg" viewBox="-80 -65 160 155" xmlns="http://www.w3.org/2000/svg">
+            <g id="map-static"></g>
+            <circle id="player-dot" r="1.7" fill="#b71f32" stroke="#fff" stroke-width="0.5"></circle>
+          </svg>
+        </div>
+        <div class="room-legend">
+          <span><i style="background:#f4b223"></i>Góc 1 - Chuyển đổi số</span>
+          <span><i style="background:#005baa"></i>Góc 2 - Đổi mới sáng tạo</span>
+          <span><i style="background:#6f8293"></i>Góc 3 - Hội nhập quốc tế</span>
+        </div>
+      </div>
+    </div>
+    <div id="hint-toast" class="hint-toast">Kéo chuột để nhìn quanh · WASD để di chuyển · Nhấp vào hiện vật để xem chi tiết</div>
+  </section>
+
+  <div id="artifact-modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-panel">
+      <button id="close-modal-btn" class="modal-close" type="button">×</button>
+      <div id="book-reader" class="book-reader" hidden>
+        <div id="book-spread" class="book-spread" aria-live="polite">
+          <article id="book-left-page" class="book-page book-page-left">
+            <div class="book-page-inner">
+              <div class="book-page-media"><img id="book-left-image" alt=""></div>
+              <div class="book-page-copy"><p id="book-left-kicker" class="book-page-kicker"></p><h3 id="book-left-title"></h3><p id="book-left-description"></p></div>
+              <span id="book-left-number" class="book-page-number"></span>
+            </div>
+          </article>
+          <div class="book-spine" aria-hidden="true"></div>
+          <article id="book-right-page" class="book-page book-page-right">
+            <div class="book-page-inner">
+              <div class="book-page-media"><img id="book-right-image" alt=""></div>
+              <div class="book-page-copy"><p id="book-right-kicker" class="book-page-kicker"></p><h3 id="book-right-title"></h3><p id="book-right-description"></p></div>
+              <span id="book-right-number" class="book-page-number"></span>
+            </div>
+          </article>
+        </div>
+        <div class="book-navigation">
+          <button id="book-prev-page" type="button" aria-label="Trang trước">‹</button>
+          <span id="book-page-indicator"></span>
+          <button id="book-next-page" type="button" aria-label="Trang sau">›</button>
+        </div>
+      </div>
+      <div id="modal-image-wrap" class="modal-image-wrap">
+        <img id="modal-image" class="modal-image" src="" alt="">
+      </div>
+      <div id="modal-info" class="modal-info">
+        <h3 id="modal-title"></h3>
+        <dl>
+          <dt>Mô tả</dt>
+          <dd id="modal-description"></dd>
+          <dt>Nhóm nội dung</dt>
+          <dd id="modal-year"></dd>
+          <dt>Nguồn tư liệu</dt>
+          <dd id="modal-source"></dd>
+        </dl>
+        <div id="modal-page-controls" class="modal-page-controls" hidden>
+          <button id="modal-prev-page" type="button">‹</button>
+          <span id="modal-page-indicator"></span>
+          <button id="modal-next-page" type="button">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="./scripts/chu-de-4.js?v=20261015-no-interactive-kiosk"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

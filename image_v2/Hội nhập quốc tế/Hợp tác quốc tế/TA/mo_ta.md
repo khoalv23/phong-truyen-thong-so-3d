@@ -1,0 +1,2 @@
+1. TA_01 và TA_02: Sinh viên tham gia chương trình hè “Ochanomizu University Summer Program” tại Nhật Bản năm 2026
+2. TA_03 - TA_10: Sinh viên tham gia chương trình trao đổi 1 học kỳ Semester@NIE tại Viện Giáo dục Quốc gia Singapore năm 2025 và 2026
