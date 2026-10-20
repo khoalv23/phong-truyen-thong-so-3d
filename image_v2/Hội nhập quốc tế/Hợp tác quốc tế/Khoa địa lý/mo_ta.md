@@ -1,1 +1,0 @@
-Trại hè 11 ngày tại trường Đại học Thanh Đảo Hoàng Hải - 20/7 - 31/7 - Thanh Đảo, Trung Quốc - Đối tác: Trường Đại học Thanh Đảo Hoàng Hải, Nhân vật: Đỗ Trường Giang - K73CLC Khoa Địa Lí

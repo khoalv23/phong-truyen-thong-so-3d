@@ -13,8 +13,14 @@ export function createSceneMaterials({
   return {
     floor,
     floorPatch,
-    wall: new THREE.MeshStandardMaterial({ color: wallColor, roughness: .86, emissive: wallEmissive, emissiveIntensity: .06 }),
-    innerWall: new THREE.MeshStandardMaterial({ color: wallColor, roughness: .86, emissive: wallEmissive, emissiveIntensity: .06 }),
+    wall: new THREE.MeshStandardMaterial({
+      color: wallColor, roughness: .86, emissive: wallEmissive, emissiveIntensity: .06,
+      side: THREE.DoubleSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true
+    }),
+    innerWall: new THREE.MeshStandardMaterial({
+      color: wallColor, roughness: .86, emissive: wallEmissive, emissiveIntensity: .06,
+      side: THREE.DoubleSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true
+    }),
     trim: new THREE.MeshStandardMaterial({ color: 0xb87333, roughness: .3, metalness: .55 }),
     baseboard: new THREE.MeshStandardMaterial({ color: 0xf7f5f0, roughness: .72, metalness: .02 }),
     carpet: new THREE.MeshStandardMaterial({ map: null, color: 0x8fa9bb, roughness: .98, metalness: 0, side: THREE.DoubleSide }),

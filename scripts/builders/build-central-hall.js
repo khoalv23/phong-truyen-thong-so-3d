@@ -24,6 +24,8 @@ export function buildCentralHallExperience({
       (item.a === firstRoom && item.b === secondRoom) ||
       (item.a === secondRoom && item.b === firstRoom)
     );
-    if (connector) createGeneralLeadBoard(connector);
+    // Keep this connector wall clear between the digital-transformation and
+    // startup-innovation rooms; the former general introduction board was
+    // intentionally removed from this location.
   });
 }

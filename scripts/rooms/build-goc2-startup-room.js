@@ -47,10 +47,18 @@ function addPhoto(context, parent, source, title, description, position, size) {
 
 function addPhotoSet(context, parent, assets, config) {
   addPhoto(context, parent, assets[0], config.title, config.description, config.main.position, config.main.size);
-  assets.slice(1).forEach((source, index) => {
-    const slot = config.support[index];
-    if (!slot) return;
-    addPhoto(context, parent, source, `${config.title} · Ảnh ${index + 2}`, config.description, slot.position, slot.size);
+  const supportSlots = config.support ?? [];
+  assets.slice(1, supportSlots.length + 1).forEach((source, index) => {
+    const slot = supportSlots[index];
+    addPhoto(
+      context,
+      parent,
+      source,
+      `${config.title} \u00b7 \u1ea2nh ${index + 2}`,
+      config.description,
+      slot.position,
+      slot.size
+    );
   });
 }
 
@@ -173,6 +181,24 @@ function buildNationalWall(context) {
     size: 120, color: '#A9252B', background: 'transparent', border: false,
     weight: 900, wrap: false, width: 300, height: 300, unlit: true
   }, wall);
+}
+
+function buildNationalWallCompactArchive(context) {
+  const { root, addTextPanel } = context;
+  const wall = new THREE.Group();
+  wall.name = "goc2-national-wall-right";
+  wall.position.set(17.34, 0, 60.5);
+  wall.rotation.y = -Math.PI / 2;
+  root.add(wall);
+  addWallTitle(addTextPanel, wall, "KH\u1edeI NGHI\u1ec6P S\u00c1NG T\u1ea0O", "Tr\u00ecnh b\u00e0y  ·  Ph\u1ea3n bi\u1ec7n  ·  Ho\u00e0n thi\u1ec7n s\u1ea3n ph\u1ea9m");
+  const board = SectionPanel(wall, { position: [0, 10.2, .20], size: [32.5, 12.2] });
+  const practice = ContentGroup(board, [-8.2, -.15, .22]);
+  const contest = ContentGroup(board, [8.2, -.15, .22]);
+  addInfoTag(addTextPanel, practice, "R\u00c8N LUY\u1ec6N NGHI\u1ec6P V\u1ee4", 0, 3.65, 13.5, { white: true, height: 1.05, size: 46 });
+  addPhoto(context, practice, GOC2_IMAGES.pitch2023[0], "R\u00e8n luy\u1ec7n thuy\u1ebft tr\u00ecnh v\u00e0 ph\u1ea3n bi\u1ec7n", GOC2_DESCRIPTIONS.pitch2023, [0, .25], [12.5, 6.4]);
+  addInfoTag(addTextPanel, contest, "CU\u1ed8C THI KH\u1edeI NGHI\u1ec6P", 0, 3.65, 13.5, { white: true, height: 1.05, size: 46 });
+  addPhoto(context, contest, GOC2_IMAGES.national2026.escape, "Cu\u1ed9c thi kh\u1edfi nghi\u1ec7p", GOC2_DESCRIPTIONS.national2026, [0, .25], [12.5, 6.4]);
+  addJourneyLine(addTextPanel, wall, "2023 — 2026", 0, .018);
 }
 
 export function buildGoc2StartupRoom({ parent, renderer, addTextPanel, registerArtifact, registerInteractive }) {

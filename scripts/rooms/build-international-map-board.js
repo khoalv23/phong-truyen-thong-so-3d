@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { INTERNATIONAL_MEDIA } from "../data/international-integration-media.js";
+import { INTERNATIONAL_SELECTED_MEDIA } from "../data/international-selected-media.js";
 
 const COLORS = {
   navy: 0x234d6f,
@@ -125,6 +126,12 @@ const HNUE = { lon: 105.85, lat: 21.03 };
 function sourceUrl(value) { return encodeURI(value); }
 
 function imageForData(data) {
+  const selectedNumber = {
+    singapore: 1, japan: 4, korea: 39, france: 28,
+    china: 6, taiwan: 5, philippines: 40
+  }[data.id];
+  const selected = INTERNATIONAL_SELECTED_MEDIA.find(item => item.number === selectedNumber);
+  if (selected) return selected.displayPath;
   return INTERNATIONAL_MEDIA.find(item =>
     item.id === data.imageId && item.mediaType === "image" && !item.isDuplicate && IMAGE_EXTENSIONS.has(item.extension)
   )?.displayPath || INTERNATIONAL_MEDIA.find(item =>
@@ -201,11 +208,6 @@ function createMapTexture(requestRender) {
       if (geometry.type === "MultiPolygon") geometry.coordinates.forEach(polygon => polygon.forEach(drawRing));
     }
     ctx.restore();
-    ctx.fillStyle = "#234D6F"; ctx.font = "900 52px 'Segoe UI', Arial, sans-serif";
-    ctx.textAlign = "center"; ctx.fillText("BẢN ĐỒ KẾT NỐI QUỐC TẾ CỦA HNUE", canvas.width / 2, 72);
-    ctx.fillStyle = "#234D6F"; ctx.font = "800 34px 'Segoe UI', Arial, sans-serif";
-
-
     texture.needsUpdate = true; requestRender?.();
   };
 
@@ -230,21 +232,21 @@ function createInfoTexture(data) {
   ctx.fillStyle = "#F8FBFC"; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#234D6F"; ctx.fillRect(0, 0, canvas.width, 78);
   ctx.fillStyle = "#D6A84B"; ctx.fillRect(0, 78, canvas.width, 10);
-  ctx.fillStyle = "#FFFFFF"; ctx.font = "900 40px 'Segoe UI', Arial, sans-serif"; ctx.fillText(data.label, 58, 53);
-  ctx.fillStyle = "#172032"; ctx.font = "900 52px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#FFFFFF"; ctx.font = "900 40px Roboto, Arial, sans-serif"; ctx.fillText(data.label, 58, 53);
+  ctx.fillStyle = "#172032"; ctx.font = "900 52px Roboto, Arial, sans-serif";
   let y = 148;
   for (const line of wrapLines(ctx, data.title, 1665, 2)) { ctx.fillText(line, 58, y); y += 60; }
-  ctx.fillStyle = "#234D6F"; ctx.font = "700 31px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#234D6F"; ctx.font = "700 31px Roboto, Arial, sans-serif";
   for (const line of wrapLines(ctx, data.unit, 1665, 2)) { ctx.fillText(line, 58, y); y += 40; }
   y += 13;
   ctx.fillStyle = "#D6A84B"; ctx.fillRect(46, y, 1708, 68);
   ctx.strokeStyle = "#8F2F34"; ctx.lineWidth = 5; ctx.strokeRect(48.5, y + 2.5, 1703, 63);
-  ctx.fillStyle = "#172032"; ctx.font = "900 30px 'Segoe UI', Arial, sans-serif"; ctx.fillText(data.stat, 76, y + 45);
+  ctx.fillStyle = "#172032"; ctx.font = "900 30px Roboto, Arial, sans-serif"; ctx.fillText(data.stat, 76, y + 45);
   y += 112;
-  ctx.fillStyle = "#334155"; ctx.font = "600 31px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#334155"; ctx.font = "600 31px Roboto, Arial, sans-serif";
   for (const line of wrapLines(ctx, data.description, 1665, 3)) { ctx.fillText(line, 58, y); y += 40; }
   ctx.fillStyle = "#EAF2F5"; ctx.fillRect(0, 540, canvas.width, 50);
-  ctx.fillStyle = "#234D6F"; ctx.font = "italic 700 24px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#234D6F"; ctx.font = "italic 700 24px Roboto, Arial, sans-serif";
   ctx.fillText("Ch\u1ecdn m\u1ed9t \u0111i\u1ec3m tr\u00ean b\u1ea3n \u0111\u1ed3 \u0111\u1ec3 xem n\u1ed9i dung", 58, 573);
   const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
@@ -286,7 +288,7 @@ function createContinuousSlideshow(paths, requestRender) {
       const readySlides = slides.filter(slide => slide.ready);
       ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
       if (!readySlides.length) {
-        ctx.fillStyle = '#FFFFFF'; ctx.font = '900 46px Segoe UI, Arial, sans-serif';
+        ctx.fillStyle = '#FFFFFF'; ctx.font = '900 46px Roboto, Arial, sans-serif';
         ctx.textAlign = 'center'; ctx.fillText('ĐANG TẢI HÌNH ẢNH HỘI NHẬP', canvas.width / 2, canvas.height / 2);
       } else {
         elapsedOnSlide += delta;
@@ -312,8 +314,6 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
 
   const header = new THREE.Mesh(new THREE.BoxGeometry(54.9, 2.65, .075), panelMaterial(COLORS.navy, { metalness: .18, roughness: .46 }));
   header.position.set(0, 9.15, .31); root.add(header);
-  const redAccent = new THREE.Mesh(new THREE.BoxGeometry(8.5, .12, .03), new THREE.MeshBasicMaterial({ color: COLORS.red }));
-  redAccent.position.set(-22.7, 7.88, .37); root.add(redAccent);
   const goldAccent = new THREE.Mesh(new THREE.BoxGeometry(44.8, .12, .03), new THREE.MeshBasicMaterial({ color: COLORS.gold }));
   goldAccent.position.set(5.0, 7.88, .37); root.add(goldAccent);
   addTextPanel("HỘI NHẬP QUỐC TẾ", [0, 9.56, .37], [34, 1.32], 0, {
@@ -342,7 +342,7 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
   imageBacking.position.set(0, 0, .285); infoRoot.add(imageBacking);
   const imageMat = new THREE.MeshBasicMaterial({ color: COLORS.white, side: THREE.DoubleSide });
   const imageMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), imageMat); imageMesh.position.set(0, 0, .31); infoRoot.add(imageMesh);
-  const slideshowPaths = INTERNATIONAL_CONNECTIONS.map(imageForData).filter(Boolean);
+  const slideshowPaths = INTERNATIONAL_CONNECTIONS.filter(data=>Number.isFinite(data.topic)).map(imageForData).filter(Boolean);
   const slideshow = createContinuousSlideshow(slideshowPaths, requestRender);
   imageMat.map = slideshow.texture; imageMat.needsUpdate = true;
   imageMesh.scale.set(14.9, 13.85, 1);
@@ -356,7 +356,8 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
     const [x, y] = mapPoint(data.lon, data.lat);
     const midpoint = new THREE.Vector3((hx + x) / 2, (hy + y) / 2 + (routeOffsets[data.id] ?? .5), .30);
     const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(hx, hy, .30), midpoint, new THREE.Vector3(x, y, .30));
-    const material = new THREE.MeshBasicMaterial({ color: COLORS.gold, transparent: true, opacity: .78 });
+    const verified=Number.isFinite(data.topic);
+    const material = new THREE.MeshBasicMaterial({ color: verified?COLORS.gold:COLORS.blue, transparent: true, opacity: verified?.78:.35 });
     const route = new THREE.Mesh(new THREE.TubeGeometry(curve, 36, .045, 7, false), material);
     mapRoot.add(route); routeEntries.set(data.id, route);
   }
@@ -397,8 +398,9 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
     selectedCountry = id;
     for (const item of INTERNATIONAL_CONNECTIONS) {
       const active = item.id === id; const marker = markerEntries.get(item.id); const route = routeEntries.get(item.id);
-      marker.material.color.setHex(active ? COLORS.red : COLORS.blue); marker.scale.setScalar(active ? 1.28 : 1);
-      route.material.color.setHex(active ? COLORS.red : COLORS.gold); route.material.opacity = active ? 1 : .62;
+      const verified=Number.isFinite(item.topic);
+      marker.material.color.setHex(active ? COLORS.red : (verified?COLORS.gold:COLORS.blue)); marker.scale.setScalar(active ? 1.28 : 1);
+      route.material.color.setHex(active ? COLORS.red : (verified?COLORS.gold:COLORS.blue)); route.material.opacity = active ? 1 : (verified?.62:.35);
     }
     infoTexture?.dispose(); infoTexture = createInfoTexture(data);
     infoMesh.material.map = infoTexture; infoMesh.material.needsUpdate = true;
@@ -407,16 +409,22 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
 
   for (const data of INTERNATIONAL_CONNECTIONS) {
     const [x, y] = mapPoint(data.lon, data.lat);
-    const material = new THREE.MeshStandardMaterial({ color: COLORS.blue, emissive: COLORS.blue, emissiveIntensity: .06, roughness: .4, metalness: .18, side: THREE.DoubleSide });
+    const verified=Number.isFinite(data.topic);
+    const markerColor=verified?COLORS.gold:COLORS.blue;
+    const material = new THREE.MeshStandardMaterial({ color: markerColor, emissive: markerColor, emissiveIntensity: .06, roughness: .4, metalness: .18, side: THREE.DoubleSide });
     const marker = new THREE.Mesh(new THREE.CircleGeometry(.32, 32), material); marker.position.set(x, y, .39);
-    marker.userData = { kind: "sceneAction", action: () => selectCountry(data.id) };
-    registerInteractive(marker); interactiveMeshes.push(marker); mapRoot.add(marker); markerEntries.set(data.id, marker);
+    if(verified){marker.userData = { kind: "sceneAction", action: () => selectCountry(data.id) };registerInteractive(marker);interactiveMeshes.push(marker)}
+    mapRoot.add(marker); markerEntries.set(data.id, marker);
     const [ox, oy] = data.labelOffset;
     addTextPanel(data.label, [x + ox, y + oy, .40], [4.15, .64], 0, {
       size: 38, minFontSize: 32, color: "#234D6F", background: "transparent", border: false,
       weight: 900, wrap: false, width: 1480, height: 230, strokeColor: "#FFFFFF", unlit: true
     }, mapRoot);
   }
+  addTextPanel("B\u1ea2N \u0110\u1ed2 THANH NI\u00caN HNUE", [-8.85,-8.25,.40], [34,1.18], 0, {
+    size:82,minFontSize:68,color:"#FFFFFF",background:"#234D6F",border:true,accent:"#D6A84B",
+    borderWidth:12,weight:900,wrap:false,width:4600,height:310,lineHeight:96,unlit:true
+  }, root);
 
   // The full-width slideshow is the sole presentation surface; no country is selected by default.
   const abortController = new AbortController();

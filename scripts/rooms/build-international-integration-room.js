@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { INTERNATIONAL_FOLDER_REPRESENTATIVES, INTERNATIONAL_MEDIA } from "../data/international-integration-media.js";
+import { INTERNATIONAL_SELECTED_MEDIA } from "../data/international-selected-media.js";
 import { buildInternationalMapBoard } from "./build-international-map-board.js";
 import { EXHIBIT_LIFT_Y } from "../config/scene-config.js";
 
@@ -35,7 +36,7 @@ function addBoard(parent,{position=[0,0,.03],size,depth=.12,color=COLORS.white,g
   const face=new THREE.Mesh(new THREE.BoxGeometry(size[0],size[1],.025),faceMaterial);
   face.position.z=depth+.055;
   group.add(outer,trim,face);
-  return {group,face,z:depth+.075};
+  return {group,outer,trim,face,z:depth+.075};
 }
 function addZoneFrame(parent,{x=0,y=10,width,height}){
   const group=new THREE.Group();group.position.set(x,y,.012);parent.add(group);
@@ -48,10 +49,20 @@ function addZoneFrame(parent,{x=0,y=10,width,height}){
   group.add(outer,gold,face);return group;
 }
 function artifactPages(items){
-  return items.filter(item=>item.mediaType==="image"&&!item.isDuplicate&&SUPPORTED_IMAGE.has(item.extension)).map(item=>({id:item.id,
+  return uniqueEvents(items).map(item=>({id:item.id,
     title:item.title,kicker:[item.year,item.person].filter(Boolean).join(" · "),
     description:item.caption,image:sourceUrl(item.displayPath),layout:"image-top"
   }));
+}
+function eventKey(item){
+  return String(item.eventId||item.activityId||item.title||item.caption||item.id).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s*\(\d+\)\s*$/,"").trim();
+}
+function uniqueEvents(items){
+  const seen=new Set();
+  return items.filter(item=>{
+    if(item.mediaType!=="image"||item.isDuplicate||!SUPPORTED_IMAGE.has(item.extension))return false;
+    const key=eventKey(item);if(seen.has(key))return false;seen.add(key);return true;
+  });
 }
 function registerImageArtifact(mesh,item,registerArtifact,registerInteractive,pages){
   const id=registerArtifact({
@@ -61,7 +72,7 @@ function registerImageArtifact(mesh,item,registerArtifact,registerInteractive,pa
   mesh.userData={kind:"artifact",id};registerInteractive(mesh);
 }
 function createLazyPhoto({parent,item,position,size,renderer,registerArtifact,registerInteractive,loaders,pages}){
-  const {group,face,z}=addBoard(parent,{position,size});
+  const {group,outer,trim,face,z}=addBoard(parent,{position,size});
   const placeholder=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide});
   const photo=new THREE.Mesh(new THREE.PlaneGeometry(1,1),placeholder);
   photo.position.z=z+.02;photo.scale.set(size[0]-.34,size[1]-.34,1);group.add(photo);
@@ -70,8 +81,11 @@ function createLazyPhoto({parent,item,position,size,renderer,registerArtifact,re
   let previewTexture=null,fullTexture=null,activeMaterial=placeholder;
   const applyTexture=(texture)=>{
     const aspect=texture.image?.width&&texture.image?.height?texture.image.width/texture.image.height:size[0]/size[1];
-    const maxW=size[0]-.34,maxH=size[1]-.34,drawW=Math.min(maxW,maxH*aspect);
-    photo.scale.set(drawW,drawW/aspect,1);
+    const maxW=size[0]-.34,maxH=size[1]-.34,drawW=Math.min(maxW,maxH*aspect),drawH=drawW/aspect;
+    photo.scale.set(drawW,drawH,1);
+    outer.scale.set((drawW+.64)/(size[0]+.30),(drawH+.64)/(size[1]+.30),1);
+    trim.scale.set((drawW+.46)/(size[0]+.12),(drawH+.46)/(size[1]+.12),1);
+    face.scale.set((drawW+.34)/size[0],(drawH+.34)/size[1],1);
     if(activeMaterial!==placeholder)activeMaterial.dispose();
     activeMaterial=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide});
     photo.material=activeMaterial;
@@ -102,6 +116,7 @@ function createLazyPhoto({parent,item,position,size,renderer,registerArtifact,re
       if(activeMaterial!==placeholder)activeMaterial.dispose();
       previewTexture?.dispose();fullTexture?.dispose();
       previewTexture=null;fullTexture=null;activeMaterial=placeholder;photo.material=placeholder;
+      outer.scale.set(1,1,1);trim.scale.set(1,1,1);face.scale.set(1,1,1);
       photo.scale.set(size[0]-.34,size[1]-.34,1);
     }
   };
@@ -134,13 +149,15 @@ function conceptLine(addTextPanel,parent,text,y=15.55,width=29){
 }
 function addGrid(ctx,wall,items,{x0,x1,y0,y1,cols,rows,alignLastRow=false}){
   if(!items.length)return;
-  const gap=.38,cellW=(x1-x0-gap*(cols-1))/cols,cellH=(y1-y0-gap*(rows-1))/rows;
+  const gapX=.52,gapY=.48;
+  const cellW=(x1-x0-gapX*(cols-1))/cols,cellH=(y1-y0-gapY*(rows-1))/rows;
   const pages=artifactPages(items);
   items.slice(0,cols*rows).forEach((item,index)=>{
     const col=index%cols,row=Math.floor(index/cols);
     const rowCount=Math.min(cols,items.length-row*cols);
-    const rowOffset=alignLastRow&&row===Math.ceil(items.length/cols)-1?(cols-rowCount)*(cellW+gap)/2:0;
-    createLazyPhoto({parent:wall,item,position:[x0+cellW/2+rowOffset+col*(cellW+gap),y1-cellH/2-row*(cellH+gap),.08],size:[cellW,cellH],renderer:ctx.renderer,registerArtifact:ctx.registerArtifact,registerInteractive:ctx.registerInteractive,loaders:ctx.loaders,pages});
+    const rowOffset=alignLastRow&&row===Math.ceil(items.length/cols)-1?(cols-rowCount)*(cellW+gapX)/2:0;
+    const x=x0+cellW/2+rowOffset+col*(cellW+gapX),y=y1-cellH/2-row*(cellH+gapY);
+    createLazyPhoto({parent:wall,item,position:[x,y,.08],size:[cellW,cellH],renderer:ctx.renderer,registerArtifact:ctx.registerArtifact,registerInteractive:ctx.registerInteractive,loaders:ctx.loaders,pages});
   });
 }
 function slideshowButton(ctx,wall,items,x,y,width=8,title="Hành trình hội nhập quốc tế"){
@@ -151,9 +168,10 @@ function slideshowButton(ctx,wall,items,x,y,width=8,title="Hành trình hội nh
 }
 function byTopic(topic,mode="fixed"){return INTERNATIONAL_MEDIA.filter(item=>item.topic===topic&&item.displayMode===mode)}
 function topicImages(topics){
-  return INTERNATIONAL_MEDIA.filter(item=>topics.includes(item.topic)&&item.mediaType==="image"&&!item.isDuplicate&&SUPPORTED_IMAGE.has(item.extension));
+  return uniqueEvents(INTERNATIONAL_MEDIA.filter(item=>topics.includes(item.topic)));
 }
-function pick(topic,count){return byTopic(topic).slice(0,count)}
+function pick(topic,count){return uniqueEvents(byTopic(topic)).slice(0,count)}
+function selected(zone){return INTERNATIONAL_SELECTED_MEDIA.filter(item=>item.zone===zone)}
 
 function buildVideoScreen(ctx,wall){
   const videos=INTERNATIONAL_MEDIA
@@ -244,35 +262,31 @@ export function buildInternationalIntegrationRoom({
   addZoneFrame(mounted["south-side"],{x:0,y:10.05,width:34.8,height:12.35});
   const contextFor=zone=>({renderer,addTextPanel,registerArtifact,registerInteractive,requestRender,setVideoActive,loaders:mounted[zone].userData.loaders});
   const northSide=mounted["north-side"],northSideCtx=contextFor("north-side");
-  const globalJourney=[...pick(1,1),...pick(3,2),...pick(4,1),...pick(9,2),...pick(11,2)];
-  titlePanel(addTextPanel,northSide,"BƯỚC RA THẾ GIỚI",17.5,34);
-  conceptLine(addTextPanel,northSide,"HỌC TẬP · TRẢI NGHIỆM · TRƯỞNG THÀNH TRONG MÔI TRƯỜNG QUỐC TẾ");
-  addGrid(northSideCtx,northSide,globalJourney,{x0:-16.3,x1:16.3,y0:5.3,y1:14.5,cols:4,rows:2,alignLastRow:true});
-  slideshowButton(northSideCtx,northSide,topicImages([1,3,4,9,11]),0,2.9,11,"Bước ra thế giới");
+  const studyAndExchange=selected("study");
+  titlePanel(addTextPanel,northSide,"HỌC TẬP VÀ TRAO ĐỔI QUỐC TẾ",17.5,34);
+  conceptLine(addTextPanel,northSide,"HỌC BỔNG · TRAO ĐỔI SINH VIÊN · CHƯƠNG TRÌNH HỌC TẬP QUỐC TẾ");
+  addGrid(northSideCtx,northSide,studyAndExchange,{x0:-15.9,x1:15.9,y0:4.45,y1:14.45,cols:5,rows:3,alignLastRow:true});
 
   const northRear=mounted["north-rear"],northRearCtx=contextFor("north-rear");
-  const integrationReadiness=[...pick(2,3),...pick(14,5)];
-  titlePanel(addTextPanel,northRear,"SẴN SÀNG HỘI NHẬP",17.65,31,116,2.25);
-  conceptLine(addTextPanel,northRear,"NGOẠI NGỮ · CÔNG NGHỆ · THÔNG TIN · KỸ NĂNG THÍCH ỨNG",15.65);
-  addGrid(northRearCtx,northRear,integrationReadiness,{x0:-16.7,x1:16.7,y0:5.1,y1:14.7,cols:4,rows:2,alignLastRow:true});
-  slideshowButton(northRearCtx,northRear,topicImages([2,14]),0,2.55,11,"Sẵn sàng hội nhập");
+  const studentExperiences=selected("experience");
+  titlePanel(addTextPanel,northRear,"TRẢI NGHIỆM QUỐC TẾ CỦA SINH VIÊN HNUE",17.65,31);
+  conceptLine(addTextPanel,northRear,"HỌC TẬP · HOẠT ĐỘNG TẬP THỂ · THÍCH NGHI VỚI MÔI TRƯỜNG MỚI",15.65);
+  addGrid(northRearCtx,northRear,studentExperiences,{x0:-15.9,x1:15.9,y0:4.15,y1:14.55,cols:5,rows:3,alignLastRow:true});
 
   const east=mounted["east-center"];
   const mapBoard=buildInternationalMapBoard({parent:east,addTextPanel,registerInteractive,renderer,requestRender});
 
   const southRear=mounted["south-rear"],southRearCtx=contextFor("south-rear");
-  const culturalConnection=[...pick(8,3),...pick(10,3),...pick(12,2)];
-  titlePanel(addTextPanel,southRear,"KẾT NỐI ĐA VĂN HÓA",17.5,31);
-  conceptLine(addTextPanel,southRear,"GẶP GỠ · ĐỐI THOẠI · CHIA SẺ · TÔN TRỌNG KHÁC BIỆT");
-  addGrid(southRearCtx,southRear,culturalConnection,{x0:-16.3,x1:16.3,y0:5.0,y1:14.5,cols:4,rows:2,alignLastRow:true});
-  slideshowButton(southRearCtx,southRear,topicImages([8,10,12]),0,2.7,11,"Kết nối đa văn hóa");
+  const languageAndCulture=selected("culture");
+  titlePanel(addTextPanel,southRear,"GIAO LƯU NGÔN NGỮ VÀ VĂN HÓA",17.5,31);
+  conceptLine(addTextPanel,southRear,"NGÔN NGỮ · VĂN HÓA · GẶP GỠ · ĐỐI THOẠI");
+  addGrid(southRearCtx,southRear,languageAndCulture,{x0:-15.9,x1:15.9,y0:4.25,y1:14.45,cols:5,rows:3,alignLastRow:true});
 
   const southSide=mounted["south-side"],southSideCtx=contextFor("south-side");
-  titlePanel(addTextPanel,southSide,"TRI THỨC KHÔNG BIÊN GIỚI",17.5,34);
-  conceptLine(addTextPanel,southSide,"HỢP TÁC HỌC THUẬT · NGHIÊN CỨU · CHIA SẺ TRI THỨC");
-  addGrid(southSideCtx,southSide,byTopic(13),{x0:-16.3,x1:16.3,y0:5.1,y1:14.4,cols:4,rows:2,alignLastRow:true});
-  const cooperationFolders=INTERNATIONAL_FOLDER_REPRESENTATIVES.filter(item=>item.folder.startsWith("Hợp tác quốc tế"));
-  slideshowButton(southSideCtx,southSide,[...topicImages([13]),...cooperationFolders],0,2.9,11,"Tri thức và hợp tác không biên giới");
+  const internationalCooperation=selected("cooperation");
+  titlePanel(addTextPanel,southSide,"KẾT NỐI VÀ HỢP TÁC QUỐC TẾ",17.5,34);
+  conceptLine(addTextPanel,southSide,"HỢP TÁC HỌC THUẬT · GIAO LƯU CHUYÊN MÔN · KẾT NỐI ĐỐI TÁC");
+  addGrid(southSideCtx,southSide,internationalCooperation,{x0:-15.9,x1:15.9,y0:4.45,y1:14.4,cols:5,rows:3,alignLastRow:true});
 
   const lazyController=zoneLoaderController(loadZones);
   registerMediaController?.(lazyController,root);

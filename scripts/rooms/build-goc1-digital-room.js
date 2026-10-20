@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GOC1_CONTENT, GOC1_TEXT } from "../data/goc1-digital-transformation.js";
+import { GOC1_SELECTED_MEDIA } from "../data/goc1-selected-media.js";
 import { EXHIBIT_LIFT_Y } from "../config/scene-config.js";
 
 import { createInternationalTopicSign } from '../core/international-topic-sign.js';
@@ -10,11 +11,24 @@ const BOARD_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff });
 function sourceUrl(source) { return encodeURI(source); }
 
 function createImageTexture(source, renderer) {
+  if (!source) return null;
   const texture = new THREE.TextureLoader().load(sourceUrl(source));
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearMipmapLinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+  return texture;
+}
+
+function createPlaceholderTexture(title = "CHO BO SUNG ANH") {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200; canvas.height = 760;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#f5f2e9"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeStyle = "#d6a84b"; ctx.lineWidth = 18; ctx.strokeRect(28, 28, canvas.width - 56, canvas.height - 56);
+  ctx.fillStyle = "#234d6f"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = "900 58px Roboto, Arial, sans-serif"; ctx.fillText(title, canvas.width / 2, canvas.height / 2);
+  const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
 
@@ -31,13 +45,6 @@ function addHorizontalNameSign(addTextPanel, parent, text, position, size, rotat
     border: true, accent: "#D6A84B", borderWidth: opts.borderWidth ?? 12,
     fitSingleLine: opts.fitSingleLine ?? false, lineHeight: opts.lineHeight, unlit: true
   }, group);
-  const accentHeight = Math.min(.085, height * .12);
-  const redWidth = Math.min(width * .16, 3.4);
-  const red = new THREE.Mesh(new THREE.BoxGeometry(redWidth, accentHeight, .018), new THREE.MeshStandardMaterial({ color: 0x982f35, roughness: .48, metalness: .10 }));
-  red.position.set(-width / 2 + redWidth / 2 + .18, -height / 2 + accentHeight * 1.6, .052);
-  const gold = new THREE.Mesh(new THREE.BoxGeometry(Math.max(width * .68, 2.2), accentHeight, .018), new THREE.MeshStandardMaterial({ color: 0xd6a84b, roughness: .34, metalness: .42 }));
-  gold.position.set(width * .10, -height / 2 + accentHeight * 1.6, .052);
-  group.add(red, gold);
   return panel;
 }
 
@@ -48,12 +55,13 @@ function addLabel(addTextPanel, parent, text, position, size, rotationY, opts = 
   });
 }
 
-export function FramedImage({ parent, source, title, description, position, size, renderer, registerArtifact, registerInteractive, groupLabel = "G\u00f3c 1 \u2013 Chuy\u1ec3n \u0111\u1ed5i s\u1ed1" }) {
+export function FramedImage({ parent, source, title, description, position, size, renderer, registerArtifact, registerInteractive, groupLabel = "G\u00f3c 1 \u2013 Chuy\u1ec3n \u0111\u1ed5i s\u1ed1", frameType = "photo", fitFrameToImage = frameType === "photo" }) {
   const group = new THREE.Group();
   group.position.set(...position);
   parent.add(group);
   const [width, height] = size;
-  const outer = new THREE.Mesh(new THREE.BoxGeometry(width + .28, height + .28, .075), new THREE.MeshStandardMaterial({ color: 0x234d6f, roughness: .48, metalness: .14 }));
+  const isDevice = frameType === "phone" || frameType === "desktop";
+  const outer = new THREE.Mesh(new THREE.BoxGeometry(width + .28, height + .28, .075), new THREE.MeshStandardMaterial({ color: isDevice ? 0x172032 : 0xd6a84b, roughness: .34, metalness: .42 }));
   outer.position.z = .035;
   const gold = new THREE.Mesh(new THREE.BoxGeometry(width + .12, height + .12, .032), new THREE.MeshStandardMaterial({ color: 0xd6a84b, roughness: .34, metalness: .42 }));
   gold.position.z = .082;
@@ -61,21 +69,46 @@ export function FramedImage({ parent, source, title, description, position, size
   matte.position.z = .108;
   group.add(outer, gold, matte);
 
-  const texture = createImageTexture(source, renderer);
+  const texture = createImageTexture(source, renderer) || createPlaceholderTexture(title);
   const photo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
   const fitImage = () => {
     const aspect = texture.image?.width && texture.image?.height ? texture.image.width / texture.image.height : width / height;
     const drawWidth = Math.min(width - .12, (height - .12) * aspect);
-    photo.scale.set(drawWidth, drawWidth / aspect, 1);
+    const drawHeight = drawWidth / aspect;
+    photo.scale.set(drawWidth, drawHeight, 1);
+    if (fitFrameToImage) {
+      outer.scale.set((drawWidth + .40) / (width + .28), (drawHeight + .40) / (height + .28), 1);
+      gold.scale.set((drawWidth + .24) / (width + .12), (drawHeight + .24) / (height + .12), 1);
+      matte.scale.set((drawWidth + .12) / width, (drawHeight + .12) / height, 1);
+    }
   };
   texture.onUpdate = fitImage;
   fitImage();
   photo.position.z = .125;
   photo.renderOrder = 4;
-  const id = registerArtifact({ title, description, group: groupLabel, image: sourceUrl(source) });
-  photo.userData = { kind: "artifact", id };
-  registerInteractive(photo);
+  if (source) {
+    const id = registerArtifact({ title, description, group: groupLabel, image: sourceUrl(source) });
+    photo.userData = { kind: "artifact", id };
+    registerInteractive(photo);
+  }
   group.add(photo);
+  if (frameType === "phone") {
+    const deviceMat = new THREE.MeshStandardMaterial({ color: 0x172032, roughness: .30, metalness: .58 });
+    const speaker = new THREE.Mesh(new THREE.BoxGeometry(width * .28, .035, .035), deviceMat);
+    speaker.position.set(0, height / 2 - .10, .15);
+    const homeIndicator = new THREE.Mesh(new THREE.BoxGeometry(width * .34, .035, .035), deviceMat);
+    homeIndicator.position.set(0, -height / 2 + .10, .15);
+    const sideButton = new THREE.Mesh(new THREE.BoxGeometry(.045, height * .18, .035), deviceMat);
+    sideButton.position.set(width / 2 + .16, height * .16, .08);
+    group.add(speaker, homeIndicator, sideButton);
+  } else if (frameType === "desktop") {
+    const deviceMat = new THREE.MeshStandardMaterial({ color: 0x172032, roughness: .30, metalness: .58 });
+    const stand = new THREE.Mesh(new THREE.BoxGeometry(width * .12, .38, .10), deviceMat);
+    stand.position.set(0, -height / 2 - .26, .05);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(width * .42, .10, .12), deviceMat);
+    foot.position.set(0, -height / 2 - .50, .05);
+    group.add(stand, foot);
+  }
   return group;
 }
 
@@ -154,10 +187,14 @@ function addVideoScreen({ parent, renderer, addTextPanel, registerInteractive, r
   group.add(screen);
   const video = document.createElement("video");
   video.src = sourceUrl(GOC1_CONTENT.community.video);
-  video.preload = "metadata";
+  video.preload = "auto";
+  video.autoplay = true;
   video.playsInline = true;
+  video.defaultMuted = true;
   video.muted = true;
   video.loop = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("muted", "");
   let texture = null;
   let resetTimer = null;
 
@@ -285,7 +322,7 @@ function CaptionBar(addTextPanel, parent, text, y, width, x = 0) {
   });
 }
 
-function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
+function buildCommunityWallLegacy({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
   const wall = new THREE.Group();
   wall.position.set(-17.34, 0, 60.5);
   wall.rotation.y = Math.PI / 2;
@@ -308,7 +345,7 @@ function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, re
   return videoController;
 }
 
-function buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
+function buildTeamTimelineWallLegacy({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
   const wall = new THREE.Group();
   wall.position.set(0, 0, 77.22);
   wall.rotation.y = Math.PI;
@@ -338,7 +375,43 @@ function buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact,
   FramedImage({ parent: spread, source: GOC1_CONTENT.movement.outreach[1], title: 'Nâng cao kỹ năng số cho cộng đồng', description: outreachDesc, position: [0, -2.65, .26], size: [5.8, 2.25], renderer, registerArtifact, registerInteractive });
 }
 
-function buildDigitalResilienceWallLegacy({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
+function buildTeamTimelineWallArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
+  const wall = new THREE.Group(); wall.position.set(0, 0, 77.22); wall.rotation.y = Math.PI; root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallBSub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  const items = [
+    { x: -10.5, title: "T\u1eacP HU\u1ea4N V\u00c0 TH\u00cdCH \u1ee8NG", source: GOC1_CONTENT.movement.training[0], caption: "T\u1eadp hu\u1ea5n k\u1ef9 n\u0103ng c\u00e1n b\u1ed9 \u0110o\u00e0n" },
+    { x: 0, title: "KH\u1edeI X\u01af\u1edaNG V\u00c0 L\u1ef0C L\u01af\u1ee2NG", source: GOC1_CONTENT.movement.launch[0], caption: "L\u1ef1c l\u01b0\u1ee3ng n\u00f2ng c\u1ed1t c\u1ee7a phong tr\u00e0o" },
+    { x: 10.5, title: "LAN T\u1eceA K\u1ef8 N\u0102NG S\u1ed0", source: GOC1_CONTENT.movement.outreach[0], caption: "Lan t\u1ecfa tri th\u1ee9c v\u00e0 k\u1ef9 n\u0103ng s\u1ed1" }
+  ];
+  items.forEach(item => {
+    const panel = SectionPanel(board, { position: [item.x, -.15, .22], size: [9.65, 10.9], mountZ: 0 });
+    SectionHeader(addTextPanel, panel, item.title, 4.75, 9.05);
+    FramedImage({ parent: panel, source: item.source, title: item.caption, description: item.caption, position: [0, .55, .26], size: [8.1, 5.45], renderer, registerArtifact, registerInteractive });
+    CaptionBar(addTextPanel, panel, item.caption, -3.65, 8.8);
+  });
+}
+
+function buildCommunityWallArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
+  const wall = new THREE.Group(); wall.position.set(-17.34, 0, 60.5); wall.rotation.y = Math.PI / 2; root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallCSub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  const slots = [
+    { x: -11.7, source: GOC1_CONTENT.community.summer[0], caption: "H\u1ed7 tr\u1ee3 c\u1ed9ng \u0111\u1ed3ng ti\u1ebfp c\u1eadn c\u00f4ng ngh\u1ec7 s\u1ed1" },
+    { x: -4.0, source: GOC1_CONTENT.community.summer[4], caption: "Ho\u1ea1t \u0111\u1ed9ng t\u00ecnh nguy\u1ec7n chuy\u1ec3n \u0111\u1ed5i s\u1ed1" },
+    { x: 4.0, source: "", caption: "H\u1ed7 tr\u1ee3 t\u1ea1i ph\u01b0\u1eddng C\u1ea7u Gi\u1ea5y" },
+    { x: 11.7, source: "", caption: "Ph\u1ed1i h\u1ee3p h\u1ed7 tr\u1ee3 c\u00f9ng l\u1ef1c l\u01b0\u1ee3ng c\u00f4ng an" }
+  ];
+  slots.forEach(slot => {
+    FramedImage({ parent: board, source: slot.source, title: slot.caption, description: slot.caption, position: [slot.x, .65, .26], size: [6.75, 5.45], renderer, registerArtifact, registerInteractive });
+    CaptionBar(addTextPanel, board, slot.caption, -3.5, 7.0, slot.x);
+  });
+  return null;
+}
+
+function buildDigitalResilienceWallDetailedArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
   const wall = new THREE.Group();
   wall.position.set(17.34, 0, 60.5);
   wall.rotation.y = -Math.PI / 2;
@@ -366,7 +439,7 @@ function buildDigitalResilienceWallLegacy({ root, renderer, addTextPanel, regist
   [[-4.55, -3.0], [0, -3.0], [4.55, -3.0]].forEach(([x, y], index) => FramedImage({ parent: right, source: GOC1_CONTENT.talks[index + 5], title: talkTitle, description: talkDesc, position: [x, y, .26], size: [4.10, 2.35], renderer, registerArtifact, registerInteractive }));
 }
 
-function buildDigitalResilienceWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
+function buildDigitalResilienceWallLegacy({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
   const wall = new THREE.Group();
   wall.position.set(17.34, 0, 60.5);
   wall.rotation.y = -Math.PI / 2;
@@ -414,6 +487,216 @@ function buildDigitalResilienceWall({ root, renderer, addTextPanel, registerArti
   [-4.75, -1.60, 1.55, 4.70].forEach((x, index) => FramedImage({ parent: skills, source: lowerSkills[index], title: index < 2 ? GOC1_TEXT.skills : 'Blockchain và AI trong giáo dục', description: index < 2 ? talkDesc : technologyDesc, position: [x, -3.55, .26], size: [2.65, 1.45], renderer, registerArtifact, registerInteractive }));
 }
 
+function buildDigitalResilienceWallArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
+  const wall = new THREE.Group();
+  wall.position.set(17.34, 0, 60.5);
+  wall.rotation.y = -Math.PI / 2;
+  root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallA, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallASub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  const sections = [
+    { title: "QU\u1ea2N L\u00dd S\u1ed0", source: GOC1_CONTENT.platform.hnueYouth, caption: "H\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd \u0111o\u00e0n vi\u00ean", type: "desktop" },
+    { title: "H\u1eccC T\u1eacP S\u1ed0", source: GOC1_CONTENT.platform.resolutionStudy, caption: "H\u1ecdc t\u1eadp ngh\u1ecb quy\u1ebft tr\u00ean n\u1ec1n t\u1ea3ng s\u1ed1", type: "phone" },
+    { title: "S\u00c1NG T\u1ea0O S\u1ed0", source: GOC1_CONTENT.platform.electionQuiz, caption: "Ho\u1ea1t \u0111\u1ed9ng s\u00e1ng t\u1ea1o tr\u00ean \u1ee9ng d\u1ee5ng s\u1ed1", type: "phone" }
+  ];
+  sections.forEach((section, index) => {
+    const x = (index - 1) * 10.35;
+    const panel = SectionPanel(board, { position: [x, -.15, .22], size: [9.35, 10.9], mountZ: 0 });
+    SectionHeader(addTextPanel, panel, section.title, 4.75, 8.75);
+    const imageSize = section.type === "phone" ? [4.2, 5.9] : [7.7, 4.8];
+    FramedImage({ parent: panel, source: section.source, title: section.caption, description: section.caption, position: [0, .65, .26], size: imageSize, frameType: section.type, renderer, registerArtifact, registerInteractive });
+    CaptionBar(addTextPanel, panel, section.caption, -3.75, 8.4);
+  });
+}
+
+function selectedMedia(zone) {
+  return GOC1_SELECTED_MEDIA.filter(item => item.zone === zone);
+}
+
+function addSelectedVideoFrame({ parent, item, position, size, renderer, addTextPanel, registerInteractive, requestRender, setVideoActive }) {
+  const group = new THREE.Group();
+  group.position.set(...position);
+  parent.add(group);
+  const [width, height] = size;
+  const outer = new THREE.Mesh(new THREE.BoxGeometry(width + .28, height + .28, .075), FRAME_MAT);
+  outer.position.z = .035;
+  const gold = new THREE.Mesh(new THREE.BoxGeometry(width + .12, height + .12, .032), FRAME_MAT);
+  gold.position.z = .082;
+  const matte = new THREE.Mesh(new THREE.BoxGeometry(width, height, .018), BOARD_MAT);
+  matte.position.z = .108;
+  const poster = createImageTexture(item.posterPath, renderer);
+  const screenMaterial = new THREE.MeshBasicMaterial({ map: poster, color: poster ? 0xffffff : 0x101820, side: THREE.DoubleSide });
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), screenMaterial);
+  const fitScreen = aspect => {
+    const maxWidth = width - .12;
+    const maxHeight = height - .12;
+    const drawWidth = Math.min(maxWidth, maxHeight * aspect);
+    screen.scale.set(drawWidth, drawWidth / aspect, 1);
+  };
+  const fitPoster = () => fitScreen(poster?.image?.width && poster?.image?.height ? poster.image.width / poster.image.height : width / height);
+  if (poster) poster.onUpdate = fitPoster;
+  fitPoster();
+  screen.position.z = .125;
+  group.add(outer, gold, matte, screen);
+
+  const video = document.createElement("video");
+  video.src = sourceUrl(item.displayPath);
+  video.preload = "auto";
+  video.autoplay = true;
+  video.playsInline = true;
+  video.defaultMuted = true;
+  video.muted = true;
+  video.loop = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("muted", "");
+  video.addEventListener("loadedmetadata", () => {
+    if (video.videoWidth && video.videoHeight) fitScreen(video.videoWidth / video.videoHeight);
+  });
+  let texture = null;
+  let disposed = false;
+  let playPending = false;
+  let retryPlaybackAt = 0;
+  const ensureTexture = () => {
+    if (texture) return;
+    texture = new THREE.VideoTexture(video);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    screenMaterial.map = texture;
+    screenMaterial.needsUpdate = true;
+  };
+  const startPlayback = () => {
+    if (disposed || !video.paused || playPending || Date.now() < retryPlaybackAt) return;
+    ensureTexture();
+    playPending = true;
+    video.play()
+      .then(() => setVideoActive?.(true))
+      .catch(() => {
+        retryPlaybackAt = Date.now() + 2000;
+        setVideoActive?.(false);
+      })
+      .finally(() => { playPending = false; });
+    requestRender?.();
+  };
+  video.addEventListener("canplay", startPlayback, { once: true });
+  screen.userData = { kind: "goc1Action", action: startPlayback };
+  registerInteractive(screen);
+  const playLabel = addTextPanel("▶  VIDEO", [0, 0, .145], [2.7, .72], 0, {
+    size: 42, minFontSize: 34, color: "#FFFFFF", background: "#0B5E9C",
+    border: true, accent: "#D6B86F", borderWidth: 9, weight: 900,
+    wrap: false, width: 720, height: 220, unlit: true
+  }, group);
+  playLabel.userData = { kind: "goc1Action", action: startPlayback };
+  registerInteractive(playLabel);
+  startPlayback();
+  return {
+    sync() { startPlayback(); },
+    dispose() {
+      disposed = true;
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      texture?.dispose();
+      poster?.dispose();
+    }
+  };
+}
+
+function addSelectedMediaGrid({
+  board, items, cols, cardSize, stepX, stepY, renderer, addTextPanel,
+  registerArtifact, registerInteractive, requestRender, setVideoActive
+}) {
+  const controllers = [];
+  const rows = Math.ceil(items.length / cols);
+  items.forEach((item, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+    const rowCount = Math.min(cols, items.length - row * cols);
+    const x = (col - (rowCount - 1) / 2) * stepX;
+    const y = ((rows - 1) / 2 - row) * stepY;
+    if (item.mediaType === "video") {
+      controllers.push(addSelectedVideoFrame({
+        parent: board, item, position: [x, y, .26], size: cardSize, renderer,
+        addTextPanel, registerInteractive, requestRender, setVideoActive
+      }));
+    } else {
+      const presentation = item.number === 7
+        ? { size: [1.55, 3.45], frameType: "phone" }
+        : item.number === 8
+          ? { size: [4.9, 3.05], frameType: "desktop" }
+          : { size: cardSize, frameType: "photo" };
+      FramedImage({
+        parent: board, source: item.displayPath, title: item.title, description: item.caption,
+        position: [x, y, .26], size: presentation.size, frameType: presentation.frameType,
+        renderer, registerArtifact, registerInteractive
+      });
+    }
+  });
+  return {
+    sync() { controllers.forEach(controller => controller.sync?.()); },
+    dispose() { controllers.forEach(controller => controller.dispose?.()); }
+  };
+}
+
+function buildDigitalResilienceWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
+  const wall = new THREE.Group();
+  wall.position.set(17.34, 0, 60.5);
+  wall.rotation.y = -Math.PI / 2;
+  root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallA, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallASub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  const platformItems = selectedMedia("platform");
+  const onlineItems = platformItems.filter(item => [5, 7, 8, 9].includes(item.number));
+  const seminarItems = platformItems.filter(item => [1, 2, 3, 4].includes(item.number));
+  const onlinePanel = SectionPanel(board, { position: [-8.05, -.15, .22], size: [15.45, 10.9], mountZ: 0 });
+  const seminarPanel = SectionPanel(board, { position: [8.05, -.15, .22], size: [15.45, 10.9], mountZ: 0 });
+  SectionHeader(addTextPanel, onlinePanel, "HOẠT ĐỘNG ONLINE", 4.75, 14.75);
+  SectionHeader(addTextPanel, seminarPanel, "TỌA ĐÀM – TẬP HUẤN", 4.75, 14.75);
+  const shared = {
+    cols: 2, cardSize: [6.15, 3.25], stepX: 7.05, stepY: 4.15,
+    renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive
+  };
+  const controllers = [
+    addSelectedMediaGrid({ board: onlinePanel, items: onlineItems, ...shared }),
+    addSelectedMediaGrid({ board: seminarPanel, items: seminarItems, ...shared })
+  ];
+  return {
+    sync() { controllers.forEach(controller => controller?.sync?.()); },
+    dispose() { controllers.forEach(controller => controller?.dispose?.()); }
+  };
+}
+
+function buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
+  const wall = new THREE.Group();
+  wall.position.set(0, 0, 77.22);
+  wall.rotation.y = Math.PI;
+  root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallBSub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  return addSelectedMediaGrid({
+    board, items: selectedMedia("movement"), cols: 3, cardSize: [8.4, 4.35],
+    stepX: 10.1, stepY: 5.0, renderer, addTextPanel, registerArtifact,
+    registerInteractive, requestRender, setVideoActive
+  });
+}
+
+function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
+  const wall = new THREE.Group();
+  wall.position.set(-17.34, 0, 60.5);
+  wall.rotation.y = Math.PI / 2;
+  root.add(wall);
+  createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
+  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallCSub, [0, 17.55, .30], [31, 1.50]);
+  const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
+  return addSelectedMediaGrid({
+    board, items: selectedMedia("community"), cols: 3, cardSize: [8.35, 2.8],
+    stepX: 10.25, stepY: 3.45, renderer, addTextPanel, registerArtifact,
+    registerInteractive, requestRender, setVideoActive
+  });
+}
+
 function RaisedCaptionText(addTextPanel, parent, text, position, size) {
   const caption = addTextPanel(text, [position[0], position[1], .08], size, 0, {
     size: 120, minFontSize: 100, color: '#0B5E9C', background: 'transparent',
@@ -429,11 +712,22 @@ export function buildGoc1DigitalRoom({ parent, renderer, addTextPanel, createRoo
   root.name = "goc1-digital-exhibit-root";
   root.position.y = EXHIBIT_LIFT_Y;
   parent.add(root);
-  buildDigitalResilienceWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive });
+  const mediaControllers = [];
+  mediaControllers.push(buildDigitalResilienceWall({
+    root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive
+  }));
 
-  buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive });
+  mediaControllers.push(buildTeamTimelineWall({
+    root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive
+  }));
 
-  root.userData.videoController = buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive });
+  mediaControllers.push(buildCommunityWall({
+    root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive
+  }));
+  root.userData.videoController = {
+    sync() { mediaControllers.forEach(controller => controller?.sync?.()); },
+    dispose() { mediaControllers.forEach(controller => controller?.dispose?.()); }
+  };
   [[-14.7, 18.5, 47], [-14.7, 18.5, 55.5], [-14.7, 18.5, 63.5], [-14.7, 18.5, 71.5]].forEach((p, i) => addSpot(root, p, [-17.4, 9.5, [47, 55.5, 63.5, 71.5][i]]));
   [[-14, 18.5, 74.78], [-7, 18.5, 74.78], [0, 18.5, 74.78], [7, 18.5, 74.78], [14, 18.5, 74.78]].forEach((p, i) => addSpot(root, p, [[-12, -2, 0, 7, 11.5][i], 9.5, 77.4], i === 2 ? 3.55 : 3.1));
   [[14.7, 18.5, 47.5], [14.7, 18.5, 56.5], [14.7, 18.5, 64.5], [14.7, 18.5, 72.5]].forEach((p, i) => addSpot(root, p, [17.35, 9.5, [47.5, 56.5, 64.5, 72.5][i]]));

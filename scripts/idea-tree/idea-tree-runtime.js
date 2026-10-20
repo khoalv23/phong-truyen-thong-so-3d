@@ -94,7 +94,7 @@ function createTechnicalValidationLabel() {
   ctx.lineWidth = 8;
   ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 48px Manrope, Arial, sans-serif";
+  ctx.font = "900 48px Roboto, Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("TECHNICAL VALIDATION ASSET - NOT FINAL DESIGN", canvas.width / 2, canvas.height / 2);
@@ -120,11 +120,11 @@ function createErrorLabel(message) {
   ctx.lineWidth = 8;
   ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "900 44px Manrope, Arial, sans-serif";
+  ctx.font = "900 44px Roboto, Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("PRODUCTION PREVIEW LOAD ERROR", canvas.width / 2, 82);
-  ctx.font = "700 28px Manrope, Arial, sans-serif";
+  ctx.font = "700 28px Roboto, Arial, sans-serif";
   ctx.fillText(String(message).slice(0, 92), canvas.width / 2, 148);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -256,11 +256,11 @@ function makeFrameTexture(item) {
   ctx.fillStyle = "#dbeafe";
   ctx.fillRect(28, 28, canvas.width - 56, 218);
   ctx.fillStyle = "#1f2937";
-  ctx.font = "700 36px Manrope, Arial, sans-serif";
+  ctx.font = "700 36px Roboto, Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(item.title, canvas.width / 2, 302);
   ctx.fillStyle = "#475569";
-  ctx.font = "600 22px Manrope, Arial, sans-serif";
+  ctx.font = "600 22px Roboto, Arial, sans-serif";
   wrapCanvasText(ctx, item.summary, canvas.width / 2, 346, canvas.width - 82, 30);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -584,7 +584,7 @@ function makeLabelSprite(text) {
   ctx.fillStyle = "rgba(15,23,42,.82)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#ffffff";
-  ctx.font = "700 32px Manrope, Arial, sans-serif";
+  ctx.font = "700 32px Roboto, Arial, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, canvas.width / 2, canvas.height / 2);

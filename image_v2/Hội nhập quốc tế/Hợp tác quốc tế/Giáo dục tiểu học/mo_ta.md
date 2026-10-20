@@ -1,1 +1,0 @@
-GDTH.01 - Sinh viên khoa GDTH tham gia trao đổi sinh viên tại trường Đại học Sư phạm Aichi, Nhật Bản - Tháng 4/2026 - Nhật Bản.  GDTH.02 - Sinh viên khoa GDTH tham gia trại hè tại trường Đại học Tài chính và Kinh tế Giang Tây, Trung Quốc - Tháng 7/2024 - Trung Quốc.

@@ -206,7 +206,7 @@ function createSoftWalkwayTexture() {
   return texture;
 }
 
-const LABEL_FONT_FAMILY = '"Be Vietnam Pro", sans-serif';
+const LABEL_FONT_FAMILY = '"Roboto", Arial, sans-serif';
 
 function makeTextTexture(text, options = {}) {
   const c = document.createElement("canvas");
@@ -343,7 +343,7 @@ function createLogoBadge(label, color, textColor, position, radius = 1, parent =
   ctx.fillStyle = textColor;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "900 84px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "900 84px Roboto, Arial, sans-serif";
   ctx.fillText(label, 256, 256);
 
   const texture = new THREE.CanvasTexture(c);
@@ -372,6 +372,8 @@ function createLayeredLogoMark(imageSrc, position, radius = 1, rotationY = 0, pa
   group.rotation.y = rotationY;
   parent.add(group);
 
+
+
   new THREE.TextureLoader().load(imageSrc, texture => {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -399,7 +401,17 @@ function createLayeredLogoMark(imageSrc, position, radius = 1, rotationY = 0, pa
       group.add(layer);
     }
 
-    const frontFace = group.children[group.children.length - 1];
+    if (/hnue/i.test(imageSrc)) {
+      const whiteBackground = new THREE.Mesh(
+        new THREE.CircleGeometry(radius * .68, 96),
+        new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })
+      );
+      whiteBackground.name = "hnue-logo-white-background";
+      whiteBackground.position.z = .06 + (layerCount - 1) * layerStep - .004;
+      group.add(whiteBackground);
+    }
+
+    const frontFace = group.children[layerCount - 1];
     frontFace.material.color.setHex(0xffffff);
     frontFace.material.roughness = .34;
     group.userData.logoDepth = (layerCount - 1) * layerStep;
@@ -428,7 +440,7 @@ function createInternationalStyleRaisedTitle(text, position, size, rotationY = 0
   const textPanel = addTextPanel(text, [0, .05, .225], [w * .91, h * .63], 0, {
     size: 220, color: "#FFFFFF", background: "transparent", border: false, weight: 900,
     wrap: false, width: 4200, height: 900, strokeColor: "#d6a84b", strokeWidth: 7,
-    depthWrite: false, depthTest: false
+    depthWrite: false, depthTest: true
   }, group);
   textPanel.renderOrder = 45;
   const redAccent = new THREE.Mesh(new THREE.BoxGeometry(Math.min(w * .18, 3.6), .11, .04), red);
@@ -483,7 +495,7 @@ function createRaisedTitleSign(text, position, size, rotationY = 0, parent = sce
     const bodyText = addTextPanel(text, [0, 0, .2 + depth], [w * .95, h * .82], 0, {
       size: 360, color: "#f4f7f9", background: "transparent", border: false,
       weight: 900, wrap: false, width: 6000, height: 2100, maxWidth: 5600, lineHeight: 640,
-      strokeColor: "#5a0f17", strokeWidth: 20, depthWrite: false, depthTest: false
+      strokeColor: "#5a0f17", strokeWidth: 20, depthWrite: false, depthTest: true
     }, group);
     bodyText.material.toneMapped = false;
     bodyText.renderOrder = 30 + i;
@@ -491,7 +503,7 @@ function createRaisedTitleSign(text, position, size, rotationY = 0, parent = sce
   const faceText = addTextPanel(text, [0, 0, .58], [w * .93, h * .78], 0, {
     size: 360, color: "#ffffff", background: "transparent", border: false,
     weight: 900, wrap: false, width: 6000, height: 2100, maxWidth: 5600, lineHeight: 640,
-    strokeColor: "#5a0f17", strokeWidth: 8, depthWrite: false, depthTest: false
+    strokeColor: "#5a0f17", strokeWidth: 8, depthWrite: false, depthTest: true
   }, group);
   faceText.material.toneMapped = false;
   faceText.renderOrder = 45;
@@ -1074,9 +1086,9 @@ function makePlaceholderCanvas(item, accent) {
   drawPlaceholderIcon(ctx, item.kind, c.width / 2, c.height / 2 - 46, 190, accent);
   ctx.fillStyle = "#172032";
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.font = "900 34px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "900 34px Roboto, Arial, sans-serif";
   wrapFillText(ctx, item.title, c.width / 2, c.height - 118, c.width - 140, 42);
-  ctx.font = "700 22px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "700 22px Roboto, Arial, sans-serif";
   ctx.fillStyle = "#64748b";
   ctx.fillText("Tư liệu minh hoạ — cập nhật khi có nội dung chính thức", c.width / 2, c.height - 46);
   return c;
@@ -1187,7 +1199,7 @@ function makeExpertPhotoTexture(name, accentHex) {
   ctx.beginPath(); ctx.ellipse(c.width / 2, c.height * .92, 240, 270, 0, Math.PI, 0, true); ctx.fill();
   ctx.restore();
   ctx.lineWidth = 14; ctx.strokeStyle = "#6f8293"; ctx.stroke(); // viền kim loại mảnh
-  ctx.fillStyle = "#5b6b78"; ctx.textAlign = "center"; ctx.font = "700 30px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#5b6b78"; ctx.textAlign = "center"; ctx.font = "700 30px Roboto, Arial, sans-serif";
   ctx.fillText("Ảnh minh hoạ — cập nhật ảnh thật", c.width / 2, c.height - 40);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -1206,9 +1218,9 @@ function makeNameplateTexture(name, role) {
   ctx.fillStyle = "#f4f7f9"; ctx.fill();
   ctx.lineWidth = 8; ctx.strokeStyle = "#d6b86f"; ctx.stroke();
   ctx.textAlign = "center";
-  ctx.fillStyle = "#172032"; ctx.font = "700 62px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "#172032"; ctx.font = "700 62px Roboto, Arial, sans-serif";
   ctx.fillText(name, c.width / 2, 130);
-  ctx.fillStyle = "rgba(23,32,50,0.72)"; ctx.font = "600 42px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = "rgba(23,32,50,0.72)"; ctx.font = "600 42px Roboto, Arial, sans-serif";
   ctx.fillText(role, c.width / 2, 205);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -2205,7 +2217,7 @@ function createIdeaTree(roomGroup) {
     size: 15, color: "#5a6f3c", background: "rgba(255,250,238,.78)", border: true,
     borderWidth: 4, accent: "#d6b86f", weight: 800,
     wrap: true, width: 1200, height: 150, maxWidth: 1060, lineHeight: 22,
-    depthWrite: false, depthTest: false
+    depthWrite: false, depthTest: true
   }, roomGroup);
 
   const ideaProjects = [
@@ -2280,7 +2292,7 @@ function attachExclusiveFrameAudio(mesh, artifactId, audioSrc = TV_VIDEO_SRC) {
   audio.preload = "metadata";
   const idleTexture = makeSpeakerIconTexture("idle");
   const playingTexture = makeSpeakerIconTexture("playing");
-  const iconMaterial = new THREE.MeshBasicMaterial({ map: idleTexture, transparent: true, depthTest: false });
+  const iconMaterial = new THREE.MeshBasicMaterial({ map: idleTexture, transparent: true, depthTest: true });
   const icon = new THREE.Mesh(new THREE.CircleGeometry(.18, 40), iconMaterial);
   const frameWidth = mesh.geometry?.parameters?.width || 1;
   const frameHeight = mesh.geometry?.parameters?.height || 1;
@@ -2548,9 +2560,9 @@ function makePinnedLetterTexture(item, accent = "#b71f32", paperColor = "#fff8e8
   ctx.fillStyle = "#172032";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.font = "900 42px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "900 42px Roboto, Arial, sans-serif";
   wrapFillText(ctx, item.title, c.width / 2, 150, c.width - 120, 50);
-  ctx.font = "700 28px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "700 28px Roboto, Arial, sans-serif";
   ctx.fillStyle = "#334155";
   wrapFillText(ctx, item.desc, c.width / 2, 410, c.width - 110, 38);
   ctx.fillStyle = accent;
@@ -2954,7 +2966,7 @@ function createGoc5WallGallery(group, content, room) {
     const titlePanel = addTextPanel(content.stt3.title, [boardFrontX - .02, gratitudeCenterY - 1.2 * G5_SX, boardCenterZ], [3.4 * G5_SX, .34], -Math.PI / 2, {
       size: 16, color: "#172032", background: "#f4f7f9", border: true, accent: "#d6b86f",
       weight: 900, wrap: true, width: 1120, height: 220, maxWidth: 920, lineHeight: 24, side: THREE.FrontSide,
-      depthWrite: false, depthTest: false
+      depthWrite: false, depthTest: true
     }, gratitudeGroup);
     titlePanel.renderOrder = 29;
   }
@@ -3141,7 +3153,7 @@ function createCurvedWallTV(parent, opts) {
   group.add(screen);
   const tvIdleTexture = makeSpeakerIconTexture("idle");
   const tvPlayingTexture = makeSpeakerIconTexture("playing");
-  const tvIconMaterial = new THREE.MeshBasicMaterial({ map: tvIdleTexture, transparent: true, depthTest: false });
+  const tvIconMaterial = new THREE.MeshBasicMaterial({ map: tvIdleTexture, transparent: true, depthTest: true });
   const tvIcon = new THREE.Mesh(new THREE.CircleGeometry(.32, 40), tvIconMaterial);
   tvIcon.position.set(width / 2 - .48, -height / 2 + .48, standOff + .08);
   tvIcon.renderOrder = 35;
@@ -3238,7 +3250,7 @@ function createCentralInteractiveKiosk() {
   const kiosk = new THREE.Group();
   kiosk.name = "central-single-screen-kiosk";
   // The main entry is on the positive-Z (south) axis, so the display faces +Z.
-  kiosk.position.y = .52;
+  kiosk.position.y = .15;
   scene.add(kiosk);
 
   const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .42, metalness: .16 });
@@ -3363,7 +3375,7 @@ function createCentralInteractiveKiosk() {
   display.add(frame, goldTrim, screenFace, redFooter, statusLight);
 
   const quizState = { view: "welcome", subject: 0, topic: 0, question: 0, score: 0, answered: false, selected: -1 };
-  const font = "Be Vietnam Pro, Segoe UI, Arial, sans-serif";
+  const font = "Roboto, Arial, sans-serif";
   const box = (x, y, w, h, color, radius = 28) => {
     quizContext.fillStyle = color;
     quizContext.beginPath();
@@ -3445,17 +3457,19 @@ function createCentralInteractiveKiosk() {
       header(topic.title.toUpperCase(), `Câu ${quizState.question + 1} / ${topic.questions.length}`);
       box(95, 212, 1858, 232, "#E7F2FA", 28);
       const questionLines = lines(question.question, 146, 292, 1710, 45, "#102A43", 58, 800);
-      const answerStart = 500 + Math.max(0, questionLines - 2) * 30;
+      const answerStart = 470 + Math.max(0, questionLines - 2) * 24;
+      quizState.answerStart = answerStart;
+      const answerStep = Math.min(184, Math.floor((1260 - answerStart) / question.choices.length));
       question.choices.forEach((choice, index) => {
-        const y = answerStart + index * 186;
+        const y = answerStart + index * answerStep;
         let fill = "#FFFFFF";
         let accent = "#005BAA";
         if (quizState.answered && index === question.answer) { fill = "#E4F7EB"; accent = "#16803C"; }
         if (quizState.answered && index === quizState.selected && index !== question.answer) { fill = "#FDEBEC"; accent = "#A9252B"; }
-        box(95, y, 1858, 146, fill, 26);
-        box(125, y + 29, 88, 88, accent, 20);
-        text(["A", "B", "C", "D"][index], 169, y + 73, 33, "#FFFFFF", "center", 900);
-        lines(choice, 255, y + 74, 1520, 34, "#102A43", 41, 700);
+        box(95, y, 1858, answerStep - 18, fill, 26);
+        box(125, y + 24, 78, 78, accent, 20);
+        text(["A", "B", "C", "D"][index], 164, y + 63, 31, "#FFFFFF", "center", 900);
+        lines(String(choice).replace(/\.$/,""), 235, y + (answerStep - 18) / 2, 1580, 31, "#102A43", 37, 700);
       });
       if (quizState.answered) {
         const correct = quizState.selected === question.answer;
@@ -3496,8 +3510,9 @@ function createCentralInteractiveKiosk() {
         else { const index = Math.floor((y - 355) / 256); if (index >= 0 && index < KIOSK_QUIZ_DATA[quizState.subject].topics.length) { quizState.topic = index; resetTopic(); quizState.view = "question"; } }
       } else if (quizState.view === "question") {
         const question = currentQuestion();
-        const answerStart = 500;
-        const answerIndex = Math.floor((y - answerStart) / 186);
+        const answerStart = quizState.answerStart || 470;
+        const answerStep = Math.min(184, Math.floor((1260 - answerStart) / question.choices.length));
+        const answerIndex = Math.floor((y - answerStart) / answerStep);
         if (!quizState.answered && answerIndex >= 0 && answerIndex < question.choices.length) { quizState.selected = answerIndex; quizState.answered = true; if (answerIndex === question.answer) quizState.score += 1; }
         else if (quizState.answered && x > 1480 && y > 1280) { if (quizState.question + 1 < activeTopic().questions.length) { quizState.question += 1; quizState.answered = false; quizState.selected = -1; } else quizState.view = "result"; }
       } else if (quizState.view === "result") {
@@ -3649,7 +3664,10 @@ function createArcWallSolid(radiusIn, radiusOut, angleStart, angleEnd, color = W
   geo.translate(0, -WALL_SINK, 0);
   const wallMaterial = color?.isMaterial
     ? color
-    : new THREE.MeshStandardMaterial({ color, roughness: .86, emissive: WALL_EMISSIVE, emissiveIntensity: .12 });
+    : new THREE.MeshStandardMaterial({
+      color, roughness: .86, emissive: WALL_EMISSIVE, emissiveIntensity: .12,
+      side: THREE.DoubleSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true
+    });
   const mesh = new THREE.Mesh(geo, wallMaterial);
   scene.add(mesh);
   if (opts.trims === false) return mesh;
@@ -3718,7 +3736,10 @@ function addLongWallHorizontalTrims(parent, position, rotationY, length, thickne
 function createStraightGapWall(pA, pB, height = CEIL_H, thickness = WALL_T, color = WALL_BEIGE, endCapExtra = thickness) {
   const wallMaterial = color?.isMaterial
     ? color
-    : new THREE.MeshStandardMaterial({ color, roughness: .86, emissive: WALL_EMISSIVE, emissiveIntensity: .12 });
+    : new THREE.MeshStandardMaterial({
+      color, roughness: .86, emissive: WALL_EMISSIVE, emissiveIntensity: .12,
+      side: THREE.DoubleSide, transparent: false, opacity: 1, depthTest: true, depthWrite: true
+    });
   const { wall, trimGroup } = createStraightWallParts({
     from: pA,
     to: pB,
@@ -4272,7 +4293,7 @@ function createLeadBoardTexture() {
   ctx.textBaseline = "middle";
   ctx.shadowColor = "rgba(255,255,255,.28)";
   ctx.shadowBlur = 8;
-  ctx.font = "800 98px Be Vietnam Pro, 'Segoe UI', Arial, sans-serif";
+  ctx.font = "800 98px Roboto, Arial, sans-serif";
   ctx.fillText("L\u1eddi d\u1eabn t\u1ed5ng qu\u00e1t:", canvas.width / 2, 128);
   ctx.shadowBlur = 0;
   ctx.strokeStyle = "rgba(192,155,93,.75)";
@@ -4286,7 +4307,7 @@ function createLeadBoardTexture() {
   ctx.lineWidth = 5;
   ctx.shadowColor = "rgba(75,45,28,.20)";
   ctx.shadowBlur = 5;
-  ctx.font = "800 72px Be Vietnam Pro, Segoe UI, Arial, sans-serif";
+  ctx.font = "800 72px Roboto, Arial, sans-serif";
   const words = "\u004C\u1ECB\u0063\u0068\u0020\u0073\u1EED\u0020\u0110\u006F\u00E0\u006E\u0020\u0054\u0068\u0061\u006E\u0068\u0020\u006E\u0069\u00EA\u006E\u0020\u0054\u0072\u01B0\u1EDD\u006E\u0067\u0020\u0110\u1EA1\u0069\u0020\u0068\u1ECD\u0063\u0020\u0053\u01B0\u0020\u0070\u0068\u1EA1\u006D\u0020\u0048\u00E0\u0020\u004E\u1ED9\u0069\u0020\u006B\u0068\u00F4\u006E\u0067\u0020\u0063\u0068\u1EC9\u0020\u006C\u00E0\u0020\u0064\u00F2\u006E\u0067\u0020\u0063\u0068\u1EA3\u0079\u0020\u0063\u1EE7\u0061\u0020\u0074\u0068\u1EDD\u0069\u0020\u0067\u0069\u0061\u006E\u002C\u0020\u006D\u00E0\u0020\u006C\u00E0\u0020\u0068\u00E0\u006E\u0068\u0020\u0074\u0072\u00EC\u006E\u0068\u0020\u0063\u1EE7\u0061\u0020\u006E\u0068\u1EEF\u006E\u0067\u0020\u0074\u0068\u1EBF\u0020\u0068\u1EC7\u0020\u0074\u0072\u00ED\u0020\u0074\u0068\u1EE9\u0063\u0020\u0074\u0072\u1EBB\u0020\u006D\u0061\u006E\u0067\u0020\u0074\u0072\u006F\u006E\u0067\u0020\u006D\u00EC\u006E\u0068\u0020\u006C\u00FD\u0020\u0074\u01B0\u1EDF\u006E\u0067\u002C\u0020\u0074\u0072\u00E1\u0063\u0068\u0020\u006E\u0068\u0069\u1EC7\u006D\u0020\u0076\u00E0\u0020\u006B\u0068\u00E1\u0074\u0020\u0076\u1ECD\u006E\u0067\u0020\u0063\u1ED1\u006E\u0067\u0020\u0068\u0069\u1EBF\u006E\u002E\u0020\u0054\u1EEB\u0020\u0067\u0069\u1EA3\u006E\u0067\u0020\u0111\u01B0\u1EDD\u006E\u0067\u0020\u0111\u1EBF\u006E\u0020\u0074\u0068\u1EF1\u0063\u0020\u0074\u0069\u1EC5\u006E\u002C\u0020\u0074\u1EEB\u0020\u0063\u0068\u0069\u1EBF\u006E\u0020\u0074\u0072\u0061\u006E\u0068\u0020\u0111\u1EBF\u006E\u0020\u0068\u006F\u00E0\u0020\u0062\u00EC\u006E\u0068\u002C\u0020\u0074\u0075\u1ED5\u0069\u0020\u0074\u0072\u1EBB\u0020\u0053\u01B0\u0020\u0070\u0068\u1EA1\u006D\u0020\u006C\u0075\u00F4\u006E\u0020\u0111\u1ED3\u006E\u0067\u0020\u0068\u00E0\u006E\u0068\u0020\u0063\u00F9\u006E\u0067\u0020\u0064\u00E2\u006E\u0020\u0074\u1ED9\u0063\u0020\u2013\u0020\u0068\u1ECD\u0063\u0020\u0074\u1EAD\u0070\u002C\u0020\u0068\u00E0\u006E\u0068\u0020\u0111\u1ED9\u006E\u0067\u0020\u0076\u00E0\u0020\u006C\u0061\u006E\u0020\u0074\u1ECF\u0061\u0020\u0067\u0069\u00E1\u0020\u0074\u0072\u1ECB\u002E".split(/\s+/);
   const lines = [];
   let line = "";
@@ -4499,7 +4520,7 @@ function createDiagonalRoomLegacy(key, parent = scene, opts = {}) {
   const backStrip = new THREE.Mesh(new THREE.BoxGeometry(ROOM_W - .4, .05, .05), ledStrip);
   backStrip.position.set(0, .64, R_BACK - .12);
   group.add(backStrip);
-  createLogoBadge(room.label.replace("G�c ", "G"), room.accent, "#ffffff", [0, CEIL_H - .35, RING_OUT + .05], .55, group);
+  // Circular room-number badges were removed to keep the wall identity uncluttered.
 
 }
 /* ==========================================================================================
@@ -4971,4 +4992,14 @@ artifactModalElements.bookNextPageBtn.addEventListener("click", showNextArtifact
 canvas3d.addEventListener("pointerdown", () => hintToast.classList.add("is-hidden"));
 setTimeout(() => hintToast.classList.add("is-hidden"), 9000);
 
-init();
+const robotoFontSet = document.fonts;
+if (robotoFontSet?.load) {
+  Promise.all([
+    robotoFontSet.load("400 16px Roboto"),
+    robotoFontSet.load("600 16px Roboto"),
+    robotoFontSet.load("700 16px Roboto"),
+    robotoFontSet.load("900 16px Roboto")
+  ]).then(init, init);
+} else {
+  init();
+}

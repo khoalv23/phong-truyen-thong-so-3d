@@ -1,4 +1,4 @@
-﻿    :root {
+    :root {
       --blue: #005baa;
       --steel: #6f8293;
       --red: #b71f32;
@@ -14,7 +14,7 @@
       height: 100%;
       margin: 0;
       overflow: hidden;
-      font-family: "Be Vietnam Pro", sans-serif;
+      font-family: "Roboto", Arial, sans-serif;
       background: #0a0e17;
     }
 
@@ -29,10 +29,9 @@
       padding: clamp(1rem, 3vw, 2.75rem);
       overflow: auto;
       color: #f8fafc;
-      background:
-        radial-gradient(circle at 82% 18%, rgba(244,178,35,.16), transparent 30%),
-        radial-gradient(circle at 12% 86%, rgba(0,91,170,.24), transparent 36%),
-        linear-gradient(135deg, #07111f 0%, #0c2037 52%, #07111f 100%);
+      background: rgba(4, 11, 21, .46);
+      -webkit-backdrop-filter: blur(12px) saturate(.72);
+      backdrop-filter: blur(12px) saturate(.72);
       transition: opacity .7s var(--ease), visibility .7s;
     }
 
@@ -45,23 +44,17 @@
     .loading-atmosphere {
       position: absolute;
       inset: 0;
-      opacity: .28;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 44px 44px;
-      mask-image: linear-gradient(to bottom, #000, transparent 88%);
+      opacity: 1;
+      background:
+        radial-gradient(circle at 50% 42%, transparent 0 24%, rgba(2, 8, 17, .12) 58%, rgba(2, 8, 17, .62) 100%),
+        linear-gradient(180deg, rgba(2, 8, 17, .12), rgba(2, 8, 17, .34));
     }
 
     .loading-shell {
       position: relative;
-      width: min(1120px, 100%);
-      padding: clamp(1.25rem, 3.5vw, 3rem);
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 24px;
-      background: rgba(8,21,37,.76);
-      box-shadow: 0 32px 90px rgba(0,0,0,.45);
-      backdrop-filter: blur(18px);
+      width: min(1180px, 100%);
+      padding: clamp(1rem, 3vw, 2.5rem);
+      text-align: center;
     }
 
     .loading-header, .loading-brand, .loading-status-row {
@@ -69,18 +62,38 @@
       align-items: center;
     }
 
-    .loading-header { justify-content: space-between; gap: 1.5rem; }
-    .loading-brand { gap: clamp(.8rem, 2vw, 1.4rem); }
-    .loading-logo { width: clamp(58px, 7vw, 86px); height: auto; filter: drop-shadow(0 8px 20px rgba(0,0,0,.35)); }
+    .loading-header { justify-content: center; }
+    .loading-brand {
+      display: grid;
+      grid-template-columns: auto minmax(0, auto) auto;
+      grid-template-areas: "hnue copy doan";
+      align-items: center;
+      justify-content: center;
+      column-gap: clamp(1rem, 2.5vw, 1.8rem);
+    }
+    .loading-logo-hnue { grid-area: hnue; }
+    .loading-brand > div { grid-area: copy; }
+    .loading-logo {
+      width: clamp(58px, 7vw, 82px);
+      height: auto;
+      flex: 0 0 auto;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff 0 68%, transparent 69%);
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,.35));
+    }
+    .loading-logo-doan {
+      grid-area: doan;
+      border-radius: 0;
+      background: transparent;
+    }
     .loading-eyebrow, .loading-language, .loading-title-en { margin: 0; letter-spacing: .14em; }
     .loading-eyebrow { color: #f4b223; font-size: clamp(.62rem, 1vw, .78rem); font-weight: 800; }
-    .loading-header h1 { margin: .35rem 0 .2rem; font-size: clamp(1.45rem, 3.2vw, 3rem); line-height: 1.08; }
+    .loading-header h1 { margin: .45rem 0 .25rem; font-size: clamp(.88rem, 3.25vw, 3rem); line-height: 1.08; white-space: nowrap; text-shadow: 0 4px 24px rgba(0,0,0,.48); }
     .loading-title-en { color: #a9c7e2; font-size: clamp(.64rem, 1.15vw, .86rem); font-weight: 700; }
-    .loading-theme-number { color: rgba(255,255,255,.09); font-size: clamp(4rem, 10vw, 8rem); font-weight: 900; line-height: .8; }
 
     .loading-divider { height: 2px; margin: clamp(1.2rem, 3vw, 2.2rem) 0; background: rgba(255,255,255,.1); overflow: hidden; }
     .loading-divider span { display: block; width: 34%; height: 100%; background: linear-gradient(90deg, #005baa, #f4b223, #b71f32); }
-    .loading-introduction { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1.5rem, 4vw, 4rem); }
+    .loading-introduction { display: none; }
     .loading-introduction article + article { padding-left: clamp(1.5rem, 4vw, 4rem); border-left: 1px solid rgba(255,255,255,.13); }
     .loading-introduction p { margin: 0 0 .72rem; color: #d9e4ef; font-size: clamp(.78rem, 1.2vw, .98rem); line-height: 1.72; }
     .loading-introduction strong { color: #fff; }
@@ -104,12 +117,12 @@
       grid-template-columns: auto auto;
       width: min(360px, 100%);
       margin: 1.25rem auto 0;
-      padding: .82rem 3.6rem .82rem 1.35rem;
-      border: 1px solid rgba(244,178,35,.75);
-      border-radius: 999px;
+      padding: .9rem 3.6rem .9rem 1.35rem;
+      border: 1px solid rgba(244,178,35,.9);
+      border-radius: 6px;
       color: #081525;
       background: linear-gradient(110deg, #f4b223, #ffd978);
-      box-shadow: 0 12px 34px rgba(244,178,35,.2);
+      box-shadow: 0 12px 34px rgba(0,0,0,.28);
       cursor: pointer;
       text-align: left;
       transition: transform .25s var(--ease), box-shadow .25s var(--ease), opacity .25s;
@@ -135,7 +148,9 @@
 
     @media (max-width: 720px) {
       .room-loading-screen { place-items: start center; }
-      .loading-theme-number { display: none; }
+      .loading-brand { column-gap: clamp(.35rem, 1.5vw, .75rem); }
+      .loading-logo { width: clamp(38px, 10vw, 52px); }
+      .loading-header h1 { font-size: clamp(.58rem, 2.55vw, 1rem); letter-spacing: -.02em; }
       .loading-introduction { grid-template-columns: 1fr; }
       .loading-introduction article + article { padding: 1rem 0 0; border-top: 1px solid rgba(255,255,255,.13); border-left: 0; }
       .loading-status-row { align-items: flex-start; flex-direction: column; gap: .2rem; }
@@ -271,7 +286,7 @@
 
     .modal-info h3 {
       margin: 0;
-      font-family: "Be Vietnam Pro", sans-serif;
+      font-family: "Roboto", Arial, sans-serif;
       font-size: clamp(1.5rem,3vw,2.5rem);
     }
 
@@ -384,7 +399,7 @@
     .book-page h3 {
       margin: 0;
       color: #4c1f23;
-      font-family: "Be Vietnam Pro", sans-serif;
+      font-family: "Roboto", Arial, sans-serif;
       font-size: clamp(1.2rem, 2.2vw, 2rem);
       line-height: 1.14;
     }
