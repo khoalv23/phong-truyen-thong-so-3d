@@ -16,11 +16,6 @@ function material(color) {
 
 function addWallTitle(addTextPanel, wall, title, subtitle, width = 25.5) {
   createInternationalTopicSign({ addTextPanel, parent: wall, text: title, position: [0, 19.54, .06] });
-  addTextPanel(subtitle, [0, 17.55, .08], [31, 1.35], 0, {
-    size: 94, minFontSize: 72, color: '#234D6F', background: 'transparent',
-    border: false, weight: 900, wrap: false, width: 4700, height: 250,
-    maxWidth: 4450, unlit: true
-  }, wall);
 }
 
 function addInfoTag(addTextPanel, parent, text, x, y, width, options = {}) {

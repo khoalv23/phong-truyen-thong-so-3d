@@ -10,6 +10,7 @@ import { buildRoomShell } from "./builders/build-room-shell.js";
 import { buildRoom } from "./rooms/build-room.js";
 import { createPolygonPatch, createStraightWallParts } from "./objects/architecture/primitives.js";
 import { createPottedPlant } from "./objects/decor/potted-plant.js";
+import { buildCentralInteractiveKiosk } from "./objects/kiosk/build-central-interactive-kiosk.js";
 import {
   registerInteractive as registerInteractiveInContext,
   registerRoomOnlyVisibility as registerRoomOnlyVisibilityInContext
@@ -380,7 +381,13 @@ function createLayeredLogoMark(imageSrc, position, radius = 1, rotationY = 0, pa
 
     const layerCount = 9;
     const layerStep = .032;
-    const logoGeometry = new THREE.CircleGeometry(radius, 96);
+    const imageWidth = texture.image?.naturalWidth || texture.image?.width || 1;
+    const imageHeight = texture.image?.naturalHeight || texture.image?.height || 1;
+    const imageAspect = imageWidth / imageHeight;
+    const safeDiameter = radius * 2 * .92;
+    const logoWidth = imageAspect > 1 ? safeDiameter : safeDiameter * imageAspect;
+    const logoHeight = imageAspect > 1 ? safeDiameter / imageAspect : safeDiameter;
+    const logoGeometry = new THREE.PlaneGeometry(logoWidth, logoHeight);
 
     for (let index = 0; index < layerCount; index++) {
       const depthRatio = index / (layerCount - 1);
@@ -832,7 +839,6 @@ function createCentralCeiling() {
     group.add(lampGlow);
   };
 
-  addCentralCeilingLamp(0, 0, -.7);
   ROOM_KEYS.forEach((key, i) => {
     const room = ROOM_DEFS[key];
     addCentralCeilingLamp(
@@ -3231,6 +3237,7 @@ const {
 const CENTRAL_CEILING_TIER_LIFT = .78;
 const SOUTH_UNIFIED_WALL_T = ENTRY_WALL_T * 1;
 const SOUTH_ENTRY_VEST_DEPTH = 4.8;
+const SOUTH_ENTRY_DOOR_HEIGHT = CEIL_H * .8;
 const SOUTH_ROOM_OUTER_WALL_T = SOUTH_UNIFIED_WALL_T;
 const SHOW_FRAME_NAMEPLATES = false;
 
@@ -3246,291 +3253,6 @@ function createHubCore() {
   return buildHubCore({ parent: scene, radius: HUB_R, material: innerWallMat });
 }
 
-function createCentralInteractiveKiosk() {
-  const kiosk = new THREE.Group();
-  kiosk.name = "central-single-screen-kiosk";
-  // The main entry is on the positive-Z (south) axis, so the display faces +Z.
-  kiosk.position.y = .15;
-  scene.add(kiosk);
-
-  const white = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .42, metalness: .16 });
-  const blue = new THREE.MeshStandardMaterial({ color: 0x005baa, roughness: .34, metalness: .28, emissive: 0x00264a, emissiveIntensity: .12 });
-  const red = new THREE.MeshStandardMaterial({ color: 0xa9252b, roughness: .38, metalness: .18 });
-  const gold = new THREE.MeshStandardMaterial({ color: 0xd6b86f, roughness: .28, metalness: .7 });
-  const screen = new THREE.MeshBasicMaterial({ color: 0x005baa });
-
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(2.35, 2.55, .36, 64), blue);
-  base.position.y = .18;
-  const baseInset = new THREE.Mesh(new THREE.CylinderGeometry(2.08, 2.22, .18, 64), white);
-  baseInset.position.y = .45;
-  const goldFoot = new THREE.Mesh(new THREE.TorusGeometry(2.24, .07, 12, 64), gold);
-  goldFoot.rotation.x = Math.PI / 2;
-  goldFoot.position.y = .57;
-
-  const column = new THREE.Mesh(new THREE.CylinderGeometry(.88, 1.14, 3.6, 48), white);
-  column.position.y = 2.35;
-  const blueCollar = new THREE.Mesh(new THREE.CylinderGeometry(1.10, 1.10, .34, 48), blue);
-  blueCollar.position.y = 1.05;
-  const redCollar = new THREE.Mesh(new THREE.CylinderGeometry(.98, .98, .16, 48), red);
-  redCollar.position.y = 2.82;
-  const goldCollar = new THREE.Mesh(new THREE.TorusGeometry(.96, .075, 12, 48), gold);
-  goldCollar.rotation.x = Math.PI / 2;
-  goldCollar.position.y = 2.98;
-  kiosk.add(base, baseInset, goldFoot, column, blueCollar, redCollar, goldCollar);
-
-  // Weldable mechanical connection: a curved saddle plate fits the circular column.
-  const weld = new THREE.MeshStandardMaterial({ color: 0x00477f, roughness: .42, metalness: .32 });
-  const curvedPlateGeometry = (innerRadius, outerRadius, height, angleStart, angleSpan, segments = 24) => {
-    const vertices = [];
-    const indices = [];
-    for (let index = 0; index <= segments; index += 1) {
-      const angle = angleStart + angleSpan * index / segments;
-      const sin = Math.sin(angle), cos = Math.cos(angle);
-      [[innerRadius, -height / 2], [innerRadius, height / 2], [outerRadius, -height / 2], [outerRadius, height / 2]].forEach(([radius, y]) => vertices.push(radius * sin, y, radius * cos));
-    }
-    for (let index = 0; index < segments; index += 1) {
-      const a = index * 4, b = a + 4;
-      indices.push(a, b, b + 1, a, b + 1, a + 1); // inner weld face
-      indices.push(a + 2, a + 3, b + 3, a + 2, b + 3, b + 2); // outer plate face
-      indices.push(a + 1, b + 1, b + 3, a + 1, b + 3, a + 3); // top edge
-      indices.push(a, a + 2, b + 2, a, b + 2, b); // bottom edge
-    }
-    indices.push(0, 1, 3, 0, 3, 2);
-    const end = segments * 4;
-    indices.push(end, end + 2, end + 3, end, end + 3, end + 1);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    return geometry;
-  };
-  const saddle = new THREE.Mesh(curvedPlateGeometry(.94, 1.08, 1.22, -1.04, 2.08), blue);
-  saddle.position.y = 3.75;
-  // Thin continuous fillet-weld beads at both vertical edges of the saddle plate.
-  [-1.04, 1.04].forEach(angle => {
-    const bead = new THREE.Mesh(new THREE.CylinderGeometry(.047, .047, 1.12, 10), weld);
-    bead.position.set(1.10 * Math.sin(angle), 3.75, 1.10 * Math.cos(angle));
-    kiosk.add(bead);
-  });
-  // A slim rear strap spreads the load around part of the column circumference.
-  const loadStrap = new THREE.Mesh(curvedPlateGeometry(1.075, 1.16, .20, 1.04, Math.PI * 2 - 2.08), blue);
-  loadStrap.position.y = 3.75;
-
-  // The rectangular steel arm starts on the outer face of the saddle and aligns radially with the column.
-  const screenYoke = new THREE.Mesh(new THREE.BoxGeometry(1.72, 1.6, 1.05), blue);
-  screenYoke.position.set(0, 4.535, 1.54);
-  screenYoke.rotation.x = .666;
-  const armWeld = new THREE.Mesh(new THREE.BoxGeometry(1.86, .10, 1.15), weld);
-  armWeld.position.set(0, 3.91, 1.07);
-  armWeld.rotation.x = .666;
-
-  const makeGusset = x => {
-    const thickness = .16;
-    const half = thickness / 2;
-    const points = [[3.78, 1.10], [4.24, 1.53], [3.78, 1.62]]; // [y, z], upper edge follows the arm
-    const vertices = [];
-    [-half, half].forEach(offset => points.forEach(([y, z]) => vertices.push(x + offset, y, z)));
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setIndex([0, 1, 2, 3, 5, 4, 0, 3, 4, 0, 4, 1, 1, 4, 5, 1, 5, 2, 2, 5, 3, 2, 3, 0]);
-    geometry.computeVertexNormals();
-    return new THREE.Mesh(geometry, blue);
-  };
-  // Paired triangular gussets sit beneath the arm, symmetrical about its centre line.
-  const gussetLeft = makeGusset(-.72);
-  const gussetRight = makeGusset(.72);
-  kiosk.add(saddle, loadStrap, armWeld, screenYoke, gussetLeft, gussetRight);
-
-  const display = new THREE.Group();
-  display.name = "central-kiosk-display";
-  display.position.set(0, 7.10, .42);
-  // Negative X rotation tilts the display face up toward the ceiling and the entry.
-  display.rotation.x = -.78;
-  kiosk.add(display);
-
-  // The rear mounting plate overlaps the angled arm, making one continuous structural joint.
-  const rearMount = new THREE.Mesh(new THREE.BoxGeometry(3.85, 1.55, .52), blue);
-  rearMount.position.set(0, -2.52, -.27);
-  const rearMountBand = new THREE.Mesh(new THREE.BoxGeometry(3.45, .16, .57), red);
-  rearMountBand.position.set(0, -2.52, -.55);
-  display.add(rearMount, rearMountBand);
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(11.6, 8.7, .30), white);
-  const goldTrim = new THREE.Mesh(new THREE.BoxGeometry(11.15, 8.25, .16), gold);
-  goldTrim.position.z = .20;
-  const quizCanvas = document.createElement("canvas");
-  quizCanvas.width = 2048;
-  quizCanvas.height = 1468;
-  const quizContext = quizCanvas.getContext("2d");
-  const quizTexture = new THREE.CanvasTexture(quizCanvas);
-  quizTexture.colorSpace = THREE.SRGBColorSpace;
-  quizTexture.minFilter = THREE.LinearFilter;
-  quizTexture.magFilter = THREE.LinearFilter;
-  const quizMaterial = new THREE.MeshBasicMaterial({ map: quizTexture, side: THREE.DoubleSide });
-  const screenFace = new THREE.Mesh(new THREE.BoxGeometry(10.25, 7.35, .12), quizMaterial);
-  screenFace.position.z = .30;
-  const redFooter = new THREE.Mesh(new THREE.BoxGeometry(10.25, .25, .07), red);
-  redFooter.position.set(0, -3.30, .40);
-  const statusLight = new THREE.Mesh(new THREE.CircleGeometry(.20, 24), gold);
-  statusLight.position.set(0, -2.93, .41);
-  display.add(frame, goldTrim, screenFace, redFooter, statusLight);
-
-  const quizState = { view: "welcome", subject: 0, topic: 0, question: 0, score: 0, answered: false, selected: -1 };
-  const font = "Roboto, Arial, sans-serif";
-  const box = (x, y, w, h, color, radius = 28) => {
-    quizContext.fillStyle = color;
-    quizContext.beginPath();
-    quizContext.roundRect(x, y, w, h, radius);
-    quizContext.fill();
-  };
-  const text = (value, x, y, size, color, align = "left", weight = 700) => {
-    quizContext.fillStyle = color;
-    quizContext.font = `${weight} ${size}px ${font}`;
-    quizContext.textAlign = align;
-    quizContext.textBaseline = "middle";
-    quizContext.fillText(value, x, y);
-  };
-  const lines = (value, x, y, width, size, color, lineHeight = size * 1.3, weight = 700) => {
-    quizContext.font = `${weight} ${size}px ${font}`;
-    const words = value.split(/\s+/);
-    const output = [];
-    let line = "";
-    words.forEach(word => {
-      const candidate = line ? `${line} ${word}` : word;
-      if (quizContext.measureText(candidate).width > width && line) { output.push(line); line = word; }
-      else line = candidate;
-    });
-    if (line) output.push(line);
-    quizContext.fillStyle = color;
-    quizContext.textAlign = "left";
-    quizContext.textBaseline = "middle";
-    output.forEach((entry, index) => quizContext.fillText(entry, x, y + index * lineHeight));
-    return output.length;
-  };
-  const activeTopic = () => KIOSK_QUIZ_DATA[quizState.subject].topics[quizState.topic];
-  const currentQuestion = () => activeTopic().questions[quizState.question];
-  const header = (label, detail = "") => {
-    quizContext.fillStyle = "#005BAA";
-    quizContext.fillRect(0, 0, 2048, 166);
-    text("KHÔNG GIAN TRUYỀN THỐNG SỐ", 86, 65, 40, "#FFFFFF", "left", 900);
-    text(label, 86, 118, 28, "#D6B86F", "left", 800);
-    if (detail) text(detail, 1958, 84, 29, "#FFFFFF", "right", 700);
-  };
-  const redrawQuiz = () => {
-    quizContext.fillStyle = "#F7F9FC";
-    quizContext.fillRect(0, 0, 2048, 1468);
-    if (quizState.view === "welcome") {
-      header("KIOSK TƯƠNG TÁC");
-      text("TRẮC NGHIỆM KHÁM PHÁ", 1024, 410, 82, "#005BAA", "center", 900);
-      text("Chọn môn học · chọn chủ đề · trả lời câu hỏi", 1024, 500, 38, "#243B53", "center", 600);
-      box(558, 730, 932, 172, "#A9252B", 38);
-      text("BẮT ĐẦU", 1024, 816, 54, "#FFFFFF", "center", 900);
-      text("CHẠM VÀO MÀN HÌNH ĐỂ TƯƠNG TÁC", 1024, 1035, 28, "#627D98", "center", 700);
-    } else if (quizState.view === "subjects") {
-      header("CHỌN MÔN HỌC", "Bước 1 / 3");
-      text("Bạn muốn khám phá nội dung nào?", 1024, 286, 49, "#102A43", "center", 800);
-      KIOSK_QUIZ_DATA.forEach((subject, index) => {
-        const y = 410 + index * 312;
-        box(210, y, 1628, 244, index === quizState.subject ? "#E7F2FA" : "#FFFFFF", 34);
-        box(250, y + 42, 160, 160, "#005BAA", 26);
-        text(subject.shortTitle, 330, y + 123, 46, "#FFFFFF", "center", 900);
-        text(subject.title.toUpperCase(), 460, y + 91, 43, "#005BAA", "left", 900);
-        text(`${subject.topics.length} CHỦ ĐỀ · ${subject.topics.reduce((sum, topic) => sum + topic.questions.length, 0)} CÂU HỎI`, 460, y + 151, 27, "#52677D", "left", 700);
-        text("CHỌN  ›", 1748, y + 123, 30, "#A9252B", "right", 900);
-      });
-    } else if (quizState.view === "topics") {
-      const subject = KIOSK_QUIZ_DATA[quizState.subject];
-      header(subject.title.toUpperCase(), "Bước 2 / 3");
-      text("CHỌN CHỦ ĐỀ", 108, 267, 49, "#102A43", "left", 900);
-      subject.topics.forEach((topic, index) => {
-        const y = 355 + index * 256;
-        box(108, y, 1832, 204, "#FFFFFF", 30);
-        box(144, y + 39, 126, 126, index === quizState.topic ? "#A9252B" : "#005BAA", 22);
-        text(String(index + 1).padStart(2, "0"), 207, y + 102, 38, "#FFFFFF", "center", 900);
-        text(topic.title.toUpperCase(), 320, y + 78, 38, "#005BAA", "left", 900);
-        text(`${topic.questions.length} CÂU HỎI TRẮC NGHIỆM`, 320, y + 135, 26, "#52677D", "left", 700);
-        text("BẮT ĐẦU  ›", 1852, y + 102, 29, "#A9252B", "right", 900);
-      });
-      text("‹  QUAY LẠI", 110, 1320, 28, "#A9252B", "left", 900);
-    } else if (quizState.view === "question") {
-      const topic = activeTopic();
-      const question = currentQuestion();
-      header(topic.title.toUpperCase(), `Câu ${quizState.question + 1} / ${topic.questions.length}`);
-      box(95, 212, 1858, 232, "#E7F2FA", 28);
-      const questionLines = lines(question.question, 146, 292, 1710, 45, "#102A43", 58, 800);
-      const answerStart = 470 + Math.max(0, questionLines - 2) * 24;
-      quizState.answerStart = answerStart;
-      const answerStep = Math.min(184, Math.floor((1260 - answerStart) / question.choices.length));
-      question.choices.forEach((choice, index) => {
-        const y = answerStart + index * answerStep;
-        let fill = "#FFFFFF";
-        let accent = "#005BAA";
-        if (quizState.answered && index === question.answer) { fill = "#E4F7EB"; accent = "#16803C"; }
-        if (quizState.answered && index === quizState.selected && index !== question.answer) { fill = "#FDEBEC"; accent = "#A9252B"; }
-        box(95, y, 1858, answerStep - 18, fill, 26);
-        box(125, y + 24, 78, 78, accent, 20);
-        text(["A", "B", "C", "D"][index], 164, y + 63, 31, "#FFFFFF", "center", 900);
-        lines(String(choice).replace(/\.$/,""), 235, y + (answerStep - 18) / 2, 1580, 31, "#102A43", 37, 700);
-      });
-      if (quizState.answered) {
-        const correct = quizState.selected === question.answer;
-        text(correct ? "CHÍNH XÁC!" : "CHƯA CHÍNH XÁC", 110, 1280, 31, correct ? "#16803C" : "#A9252B", "left", 900);
-        text(question.explanation, 370, 1280, 25, "#52677D", "left", 600);
-        box(1520, 1310, 430, 102, "#A9252B", 24);
-        text(quizState.question + 1 === topic.questions.length ? "XEM KẾT QUẢ" : "CÂU TIẾP  ›", 1735, 1361, 25, "#FFFFFF", "center", 900);
-      }
-    } else {
-      const topic = activeTopic();
-      header("HOÀN THÀNH", "Kết quả");
-      text("KẾT QUẢ CỦA BẠN", 1024, 345, 62, "#005BAA", "center", 900);
-      text(`${quizState.score} / ${topic.questions.length}`, 1024, 552, 142, "#A9252B", "center", 900);
-      text("SỐ CÂU TRẢ LỜI ĐÚNG", 1024, 666, 30, "#52677D", "center", 800);
-      text(quizState.score === topic.questions.length ? "Xuất sắc! Bạn đã nắm rất vững nội dung." : "Hãy thử lại để khám phá thêm kiến thức nhé.", 1024, 790, 34, "#102A43", "center", 700);
-      box(388, 980, 600, 132, "#A9252B", 30);
-      box(1060, 980, 600, 132, "#005BAA", 30);
-      text("LÀM LẠI", 688, 1046, 35, "#FFFFFF", "center", 900);
-      text("CHỌN CHỦ ĐỀ", 1360, 1046, 35, "#FFFFFF", "center", 900);
-    }
-    quizTexture.needsUpdate = true;
-    requestRender();
-  };
-  const resetTopic = () => { quizState.question = 0; quizState.score = 0; quizState.answered = false; quizState.selected = -1; };
-  screenFace.userData = {
-    kind: "sceneAction",
-    action: rayHit => {
-      const uv = rayHit?.uv;
-      if (!uv) return;
-      const x = uv.x * quizCanvas.width;
-      const y = (1 - uv.y) * quizCanvas.height;
-      if (quizState.view === "welcome") { quizState.view = "subjects"; }
-      else if (quizState.view === "subjects") {
-        const index = Math.floor((y - 410) / 312);
-        if (index >= 0 && index < KIOSK_QUIZ_DATA.length) { quizState.subject = index; quizState.topic = 0; quizState.view = "topics"; }
-      } else if (quizState.view === "topics") {
-        if (y > 1260) quizState.view = "subjects";
-        else { const index = Math.floor((y - 355) / 256); if (index >= 0 && index < KIOSK_QUIZ_DATA[quizState.subject].topics.length) { quizState.topic = index; resetTopic(); quizState.view = "question"; } }
-      } else if (quizState.view === "question") {
-        const question = currentQuestion();
-        const answerStart = quizState.answerStart || 470;
-        const answerStep = Math.min(184, Math.floor((1260 - answerStart) / question.choices.length));
-        const answerIndex = Math.floor((y - answerStart) / answerStep);
-        if (!quizState.answered && answerIndex >= 0 && answerIndex < question.choices.length) { quizState.selected = answerIndex; quizState.answered = true; if (answerIndex === question.answer) quizState.score += 1; }
-        else if (quizState.answered && x > 1480 && y > 1280) { if (quizState.question + 1 < activeTopic().questions.length) { quizState.question += 1; quizState.answered = false; quizState.selected = -1; } else quizState.view = "result"; }
-      } else if (quizState.view === "result") {
-        if (x < 1024 && y > 920) { resetTopic(); quizState.view = "question"; }
-        else if (x >= 1024 && y > 920) quizState.view = "topics";
-      }
-      redrawQuiz();
-    }
-  };
-  registerInteractiveObject(screenFace);
-  redrawQuiz();
-
-  const kioskGlow = new THREE.PointLight(0xd6b86f, 2.1, 9, 2);
-  kioskGlow.position.set(0, 5.65, 2.4);
-  kioskGlow.userData.keepRealLight = true;
-  kiosk.add(kioskGlow);
-  return kiosk;
-}
 function createRadialCarpet() {
   if (!carpetMat.map) carpetMat.map = createSoftWalkwayTexture();
 }
@@ -3845,8 +3567,8 @@ function createEntranceWedge() {
   createStraightGapWall(wallA, doorA, CEIL_H, WALL_T, WALL_BEIGE);
   createStraightGapWall(doorB, wallB, CEIL_H, WALL_T, WALL_BEIGE);
 
-  const headerH = .6;
-  const header = new THREE.Mesh(new THREE.BoxGeometry(doorHalf * 2 + WALL_T * 2, headerH, WALL_T), trimMat);
+  const headerH = .18;
+  const header = new THREE.Mesh(new THREE.BoxGeometry(doorHalf * 2 + WALL_T * 2, headerH, .12), trimMat);
   header.position.set(center[0], CEIL_H - headerH / 2, center[1]);
   header.rotation.y = Math.atan2(-uz, ux);
   scene.add(header);
@@ -3872,7 +3594,36 @@ function createEntranceWedge() {
 
   createStraightGapWall(doorA, outerA, CEIL_H, WALL_T, WALL_BEIGE);
   createStraightGapWall(doorB, outerB, CEIL_H, WALL_T, WALL_BEIGE);
-  createSouthEntranceWoodenDoor(outerA, outerB, CEIL_H, WALL_T);
+
+  // Close the height difference between the lower entry ceiling and the main room ceiling
+  // with an architectural fascia that matches the room walls.
+  const entryCeilingY = CEIL_H + .5;
+  const entryFasciaHeight = entryCeilingY - SOUTH_ENTRY_DOOR_HEIGHT;
+  const entryFasciaMat = new THREE.MeshStandardMaterial({
+    color: WALL_BEIGE, roughness: .86, emissive: WALL_EMISSIVE, emissiveIntensity: .12, side: THREE.DoubleSide
+  });
+  const entryFascia = new THREE.Mesh(
+    new THREE.BoxGeometry(doorHalf * 2 + WALL_T * .8, entryFasciaHeight, WALL_T + .04),
+    entryFasciaMat
+  );
+  entryFascia.position.set(center[0], SOUTH_ENTRY_DOOR_HEIGHT + entryFasciaHeight / 2, center[1]);
+  entryFascia.rotation.y = Math.atan2(-uz, ux);
+  scene.add(entryFascia);
+
+  // One horizontal trim joins the two ceiling-side trim endpoints.  It is
+  // mounted on both faces of the fascia so the hall-side view is never hidden.
+  const entryTopTrimGroup = new THREE.Group();
+  entryTopTrimGroup.name = "south-entry-horizontal-wall-trim";
+  entryTopTrimGroup.position.set(center[0], 0, center[1]);
+  entryTopTrimGroup.rotation.y = Math.atan2(-uz, ux);
+  const entryTopTrimW = doorHalf * 2 + WALL_T * .8;
+  [-1, 1].forEach(face => {
+    const trim = new THREE.Mesh(new THREE.BoxGeometry(entryTopTrimW, headerH, .12), trimMat);
+    trim.position.set(0, CEIL_H - headerH / 2, face * (WALL_T / 2 + .07));
+    entryTopTrimGroup.add(trim);
+  });
+  scene.add(entryTopTrimGroup);
+  createSouthEntranceWoodenDoor(outerA, outerB, SOUTH_ENTRY_DOOR_HEIGHT, WALL_T);
   createFlatFloorPatch([doorA, doorB, outerB, outerA]);
 
   const vestCenterX = center[0] + outwardX * SOUTH_ENTRY_VEST_DEPTH / 2;
@@ -3882,7 +3633,7 @@ function createEntranceWedge() {
   vestCarpet.position.set(vestCenterX, .055, vestCenterZ);
   scene.add(vestCarpet);
 
-  createDropCeiling(doorHalf * 2, SOUTH_ENTRY_VEST_DEPTH, CEIL_H + .5, vestCenterZ, scene, vestCenterX, {
+  createDropCeiling(doorHalf * 2, SOUTH_ENTRY_VEST_DEPTH, SOUTH_ENTRY_DOOR_HEIGHT, vestCenterZ, scene, vestCenterX, {
     surfaceMat: centralCeilingMat,
     coveColor: LIGHT_AMBER_COVE
   });
@@ -4934,7 +4685,7 @@ function init() {
   buildMinimap();
 
   createHubCore();
-  createCentralInteractiveKiosk();
+  buildCentralInteractiveKiosk({ parent: scene, quizData: KIOSK_QUIZ_DATA, registerInteractiveObject, requestRender });
   createCeilingBackfill();
   createCentralCeiling();
   createFloorColorUnderlay();

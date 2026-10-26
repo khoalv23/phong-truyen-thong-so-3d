@@ -328,7 +328,6 @@ function buildCommunityWallLegacy({ root, renderer, addTextPanel, registerArtifa
   wall.rotation.y = Math.PI / 2;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallCSub, [0, 17.55, .30], [31, 1.50]);
 
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const summerDesc = 'Đội Bình dân học vụ số triển khai các hoạt động dạy học, hỗ trợ học sinh tiếp cận công nghệ số và AI trong Chiến dịch Mùa hè xanh 2026; đồng thời lan tỏa văn hóa đọc và tinh thần tình nguyện trong cộng đồng.';
@@ -351,7 +350,6 @@ function buildTeamTimelineWallLegacy({ root, renderer, addTextPanel, registerArt
   wall.rotation.y = Math.PI;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallBSub, [0, 17.55, .30], [31, 1.50]);
 
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const start = SectionPanel(board, { position: [-11.25, -.15, .22], size: [9.0, 10.9], mountZ: 0 });
@@ -378,7 +376,6 @@ function buildTeamTimelineWallLegacy({ root, renderer, addTextPanel, registerArt
 function buildTeamTimelineWallArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive }) {
   const wall = new THREE.Group(); wall.position.set(0, 0, 77.22); wall.rotation.y = Math.PI; root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallBSub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const items = [
     { x: -10.5, title: "T\u1eacP HU\u1ea4N V\u00c0 TH\u00cdCH \u1ee8NG", source: GOC1_CONTENT.movement.training[0], caption: "T\u1eadp hu\u1ea5n k\u1ef9 n\u0103ng c\u00e1n b\u1ed9 \u0110o\u00e0n" },
@@ -396,7 +393,6 @@ function buildTeamTimelineWallArchive({ root, renderer, addTextPanel, registerAr
 function buildCommunityWallArchive({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
   const wall = new THREE.Group(); wall.position.set(-17.34, 0, 60.5); wall.rotation.y = Math.PI / 2; root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallCSub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const slots = [
     { x: -11.7, source: GOC1_CONTENT.community.summer[0], caption: "H\u1ed7 tr\u1ee3 c\u1ed9ng \u0111\u1ed3ng ti\u1ebfp c\u1eadn c\u00f4ng ngh\u1ec7 s\u1ed1" },
@@ -445,7 +441,6 @@ function buildDigitalResilienceWallLegacy({ root, renderer, addTextPanel, regist
   wall.rotation.y = -Math.PI / 2;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallA, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallASub, [0, 17.55, .30], [31, 1.50]);
 
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const platform = SectionPanel(board, { position: [-7.65, -.15, .22], size: [16.7, 10.9], mountZ: 0 });
@@ -493,7 +488,6 @@ function buildDigitalResilienceWallArchive({ root, renderer, addTextPanel, regis
   wall.rotation.y = -Math.PI / 2;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallA, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallASub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const sections = [
     { title: "QU\u1ea2N L\u00dd S\u1ed0", source: GOC1_CONTENT.platform.hnueYouth, caption: "H\u1ec7 th\u1ed1ng qu\u1ea3n l\u00fd \u0111o\u00e0n vi\u00ean", type: "desktop" },
@@ -588,6 +582,7 @@ function addSelectedVideoFrame({ parent, item, position, size, renderer, addText
   }, group);
   playLabel.userData = { kind: "goc1Action", action: startPlayback };
   registerInteractive(playLabel);
+  playLabel.visible = false;
   startPlayback();
   return {
     sync() { startPlayback(); },
@@ -644,15 +639,14 @@ function buildDigitalResilienceWall({ root, renderer, addTextPanel, registerArti
   wall.rotation.y = -Math.PI / 2;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallA, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallASub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   const platformItems = selectedMedia("platform");
   const onlineItems = platformItems.filter(item => [5, 7, 8, 9].includes(item.number));
   const seminarItems = platformItems.filter(item => [1, 2, 3, 4].includes(item.number));
   const onlinePanel = SectionPanel(board, { position: [-8.05, -.15, .22], size: [15.45, 10.9], mountZ: 0 });
   const seminarPanel = SectionPanel(board, { position: [8.05, -.15, .22], size: [15.45, 10.9], mountZ: 0 });
-  SectionHeader(addTextPanel, onlinePanel, "HOẠT ĐỘNG ONLINE", 4.75, 14.75);
-  SectionHeader(addTextPanel, seminarPanel, "TỌA ĐÀM – TẬP HUẤN", 4.75, 14.75);
+  SectionHeader(addTextPanel, onlinePanel, "CÁC HOẠT ĐỘNG TRÊN NỀN TẢNG SỐ", 4.75, 14.75);
+  SectionHeader(addTextPanel, seminarPanel, "KỸ NĂNG THÍCH ỨNG CỦA ĐOÀN VIÊN TRÊN MÔI TRƯỜNG SỐ", 4.75, 14.75);
   const shared = {
     cols: 2, cardSize: [6.15, 3.25], stepX: 7.05, stepY: 4.15,
     renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive
@@ -673,7 +667,6 @@ function buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact,
   wall.rotation.y = Math.PI;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallBSub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   return addSelectedMediaGrid({
     board, items: selectedMedia("movement"), cols: 3, cardSize: [8.4, 4.35],
@@ -688,7 +681,6 @@ function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, re
   wall.rotation.y = Math.PI / 2;
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
-  RaisedCaptionText(addTextPanel, wall, GOC1_TEXT.wallCSub, [0, 17.55, .30], [31, 1.50]);
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   return addSelectedMediaGrid({
     board, items: selectedMedia("community"), cols: 3, cardSize: [8.35, 2.8],
