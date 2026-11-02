@@ -20,7 +20,7 @@ const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
 export const INTERNATIONAL_CONNECTIONS = [
   {
     id: "singapore", label: "SINGAPORE", lon: 103.82, lat: 1.35, topic: 3,
-    title: "Semester@NIE", unit: "National Institute of Education, Singapore",
+    title: "H\u1ecdc k\u1ef3 qu\u1ed1c t\u1ebf Semester@NIE 2026", unit: "National Institute of Education, Singapore",
     stat: "05 SINH VIÊN · HỌC BỔNG HƠN 400 TRIỆU ĐỒNG",
     description: "Học kỳ quốc tế, phát triển chuyên môn, ngoại ngữ và trải nghiệm môi trường giáo dục đa văn hóa.",
     labelOffset: [-1.15, -.52]
@@ -33,10 +33,10 @@ export const INTERNATIONAL_CONNECTIONS = [
     labelOffset: [-1.05, 1.35]
   },
   {
-    id: "korea", label: "HÀN QUỐC", lon: 128.10, lat: 35.15, topic: 7,
-    title: "GNU-GIMS Fellowship", unit: "Gyeongsang National University",
-    stat: "02 SINH VIÊN · GIÁ TRỊ GẦN 200 TRIỆU ĐỒNG",
-    description: "Học bổng hỗ trợ học phí một học kỳ và các chi phí liên quan cho sinh viên HNUE.",
+    id: "korea", label: "H\u00c0N QU\u1ed0C", lon: 128.10, lat: 35.15,
+    title: "K\u00fd k\u1ebft MOU v\u1edbi \u0110\u1ea1i h\u1ecdc Qu\u1ed1c gia Jeonbuk", unit: "Tr\u01b0\u1eddng THPT Chuy\u00ean \u0110HSP \u00b7 \u0110\u1ea1i h\u1ecdc Qu\u1ed1c gia Jeonbuk",
+    stat: "H\u1ee2P T\u00c1C GI\u00c1O D\u1ee4C \u00b7 TH\u00c1NG 8/2026",
+    description: "L\u1ec5 k\u00fd k\u1ebft bi\u00ean b\u1ea3n ghi nh\u1edb m\u1edf r\u1ed9ng h\u1ee3p t\u00e1c gi\u00e1o d\u1ee5c v\u00e0 t\u0103ng c\u01b0\u1eddng k\u1ebft n\u1ed1i h\u1ecdc thu\u1eadt gi\u1eefa hai \u0111\u01a1n v\u1ecb t\u1ea1i Tr\u01b0\u1eddng \u0110\u1ea1i h\u1ecdc S\u01b0 ph\u1ea1m H\u00e0 N\u1ed9i.",
     labelOffset: [-1.45, .82]
   },
   {
@@ -226,104 +226,71 @@ function wrapLines(ctx, text, maxWidth, maxLines = 4) {
   return lines;
 }
 
-function createInfoTexture(data) {
-  const canvas = document.createElement("canvas"); canvas.width = 1800; canvas.height = 590;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#F8FBFC"; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#234D6F"; ctx.fillRect(0, 0, canvas.width, 78);
-  ctx.fillStyle = "#D6A84B"; ctx.fillRect(0, 78, canvas.width, 10);
-  ctx.fillStyle = "#FFFFFF"; ctx.font = "900 40px Roboto, Arial, sans-serif"; ctx.fillText(data.label, 58, 53);
-  ctx.fillStyle = "#172032"; ctx.font = "900 52px Roboto, Arial, sans-serif";
-  let y = 148;
-  for (const line of wrapLines(ctx, data.title, 1665, 2)) { ctx.fillText(line, 58, y); y += 60; }
-  ctx.fillStyle = "#234D6F"; ctx.font = "700 31px Roboto, Arial, sans-serif";
-  for (const line of wrapLines(ctx, data.unit, 1665, 2)) { ctx.fillText(line, 58, y); y += 40; }
-  y += 13;
-  ctx.fillStyle = "#D6A84B"; ctx.fillRect(46, y, 1708, 68);
-  ctx.strokeStyle = "#8F2F34"; ctx.lineWidth = 5; ctx.strokeRect(48.5, y + 2.5, 1703, 63);
-  ctx.fillStyle = "#172032"; ctx.font = "900 30px Roboto, Arial, sans-serif"; ctx.fillText(data.stat, 76, y + 45);
-  y += 112;
-  ctx.fillStyle = "#334155"; ctx.font = "600 31px Roboto, Arial, sans-serif";
-  for (const line of wrapLines(ctx, data.description, 1665, 3)) { ctx.fillText(line, 58, y); y += 40; }
-  ctx.fillStyle = "#EAF2F5"; ctx.fillRect(0, 540, canvas.width, 50);
-  ctx.fillStyle = "#234D6F"; ctx.font = "italic 700 24px Roboto, Arial, sans-serif";
-  ctx.fillText("Ch\u1ecdn m\u1ed9t \u0111i\u1ec3m tr\u00ean b\u1ea3n \u0111\u1ed3 \u0111\u1ec3 xem n\u1ed9i dung", 58, 573);
-  const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearMipmapLinearFilter; texture.magFilter = THREE.LinearFilter;
-  return texture;
+function mediaForData(data) {
+  // The generated topic manifest may reference source folders that are not shipped with the scene.
+  // Use the curated, top-level display asset that is guaranteed to be part of the exhibition bundle.
+  const path = imageForData(data);
+  const selected = INTERNATIONAL_SELECTED_MEDIA.find(item => item.displayPath === path);
+  return selected ? [selected] : [];
 }
 
-function createContinuousSlideshow(paths, requestRender) {
-  const canvas = document.createElement('canvas');
-  // Match the right-hand display panel (14.9 × 8.85) so the texture itself is never stretched.
-  canvas.width = 1200; canvas.height = 1128;
-  const ctx = canvas.getContext('2d');
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
-
-  const slides = paths.map(path => ({ image: new Image(), ready: false }));
-  let slideIndex = 0; let elapsedOnSlide = 0; let lastTime = performance.now(); let disposed = false;
-  const HOLD_SECONDS = 0, SLIDE_SECONDS = 9;
-  const CARD_GAP = 12, CARD_WIDTH = canvas.width - CARD_GAP;
-  slides.forEach((slide, index) => {
-    slide.image.onload = () => { slide.ready = true; requestRender?.(); };
-    slide.image.onerror = () => { slides.splice(index, 1); };
-    slide.image.src = sourceUrl(paths[index]);
+function drawJustifiedText(ctx, text, x, y, width, lineHeight, maxLines) {
+  const words = String(text || "").trim().split(/\s+/).filter(Boolean); const lines = []; let line = [];
+  for (const word of words) {
+    const candidate = [...line, word].join(" ");
+    if (!line.length || ctx.measureText(candidate).width <= width) line.push(word);
+    else { lines.push(line); line = [word]; if (lines.length === maxLines - 1) break; }
+  }
+  if (line.length && lines.length < maxLines) lines.push(line);
+  lines.forEach((parts, index) => {
+    const last = index === lines.length - 1;
+    if (last || parts.length === 1) ctx.fillText(parts.join(" "), x, y + index * lineHeight);
+    else { const wordsWidth = parts.reduce((sum, part) => sum + ctx.measureText(part).width, 0); const gap = (width - wordsWidth) / (parts.length - 1); let cursor = x;
+      parts.forEach(part => { ctx.fillText(part, cursor, y + index * lineHeight); cursor += ctx.measureText(part).width + gap; }); }
   });
+  return lines.length;
+}
 
-  const drawContain = (image, offsetX = 0) => {
-    const scale = Math.min(CARD_WIDTH / image.naturalWidth, canvas.height / image.naturalHeight);
-    const width = image.naturalWidth * scale, height = image.naturalHeight * scale;
-    ctx.drawImage(image, offsetX + (CARD_WIDTH - width) / 2, (canvas.height - height) / 2, width, height);
-  };
-
-  return {
-    texture,
-    step(now = performance.now()) {
-      if (disposed) return;
-      const delta = Math.min((now - lastTime) / 1000, .1); lastTime = now;
-      const readySlides = slides.filter(slide => slide.ready);
-      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (!readySlides.length) {
-        ctx.fillStyle = '#FFFFFF'; ctx.font = '900 46px Roboto, Arial, sans-serif';
-        ctx.textAlign = 'center'; ctx.fillText('ĐANG TẢI HÌNH ẢNH HỘI NHẬP', canvas.width / 2, canvas.height / 2);
-      } else {
-        elapsedOnSlide += delta;
-        if (elapsedOnSlide >= HOLD_SECONDS + SLIDE_SECONDS) {
-          slideIndex = (slideIndex + 1) % readySlides.length;
-          elapsedOnSlide = 0;
-        }
-        const progress = Math.max(0, (elapsedOnSlide - HOLD_SECONDS) / SLIDE_SECONDS);
-        const current = readySlides[slideIndex % readySlides.length].image;
-        const next = readySlides[(slideIndex + 1) % readySlides.length].image;
-        drawContain(current, -canvas.width * progress);
-        if (progress > 0) drawContain(next, canvas.width * (1 - progress));
-      }
-      texture.needsUpdate = true; requestRender?.();
-    },
-    dispose() { disposed = true; texture.dispose(); }
-  };
+function createInfoScreen(requestRender) {
+  const canvas = document.createElement("canvas"); canvas.width = 1800; canvas.height = 1080;
+  const ctx = canvas.getContext("2d"); const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter; texture.magFilter = THREE.LinearFilter; texture.generateMipmaps = false;
+  let token = 0; let disposed = false;
+  const base = () => { const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height); gradient.addColorStop(0, "#f8fbfc"); gradient.addColorStop(1, "#e7eff3");
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = "#102a3c"; ctx.fillRect(0, 0, canvas.width, 112); ctx.fillStyle = "#d6a84b"; ctx.fillRect(0, 112, canvas.width, 9); };
+  const drawEmpty = () => { base(); ctx.textAlign = "center"; ctx.fillStyle = "#234d6f"; ctx.font = "900 58px Roboto, Arial, sans-serif"; ctx.fillText("KH\u00c1M PH\u00c1 H\u1ed8I NH\u1eacP QU\u1ed0C T\u1ebe", 900, 470);
+    ctx.font = "500 35px Roboto, Arial, sans-serif"; ctx.fillStyle = "#526b7a"; ctx.fillText("Ch\u1ecdn m\u1ed9t ch\u1ea5m v\u00e0ng tr\u00ean b\u1ea3n \u0111\u1ed3 \u0111\u1ec3 xem th\u00f4ng tin", 900, 545); ctx.textAlign = "left"; texture.needsUpdate = true; };
+  const drawContent = (data, media, index, image) => { base(); ctx.textAlign = "left"; ctx.fillStyle = "#ffffff"; ctx.font = "900 42px Roboto, Arial, sans-serif"; ctx.fillText(data.label, 58, 73);
+    ctx.fillStyle = "#d6a84b"; ctx.font = "800 27px Roboto, Arial, sans-serif"; ctx.textAlign = "right"; ctx.fillText("\u0110I\u1ec2M K\u1ebeT N\u1ed0I \u0110ANG CH\u1eccN", 1740, 70); ctx.textAlign = "left";
+    const imageX = 46, imageY = 164, imageW = 930, imageH = 748; ctx.fillStyle = "#0b1821"; ctx.fillRect(imageX, imageY, imageW, imageH);
+    if (image?.naturalWidth) { const scale = Math.min(imageW / image.naturalWidth, imageH / image.naturalHeight); const w = image.naturalWidth * scale, h = image.naturalHeight * scale; ctx.drawImage(image, imageX + (imageW - w) / 2, imageY + (imageH - h) / 2, w, h); }
+    else { ctx.fillStyle = "#8fa4b0"; ctx.font = "700 31px Roboto, Arial, sans-serif"; ctx.textAlign = "center"; ctx.fillText("\u0110ANG T\u1ea2I H\u00ccNH \u1ea2NH", imageX + imageW / 2, imageY + imageH / 2); ctx.textAlign = "left"; }
+    const x = 1035, width = 710; let y = 205; ctx.fillStyle = "#172032"; ctx.font = "900 48px Roboto, Arial, sans-serif";
+    for (const line of wrapLines(ctx, data.title, width, 3)) { ctx.fillText(line, x, y); y += 57; }
+    y += 12; ctx.fillStyle = "#234d6f"; ctx.font = "700 29px Roboto, Arial, sans-serif"; for (const line of wrapLines(ctx, data.unit, width, 3)) { ctx.fillText(line, x, y); y += 38; }
+    y += 20; ctx.fillStyle = "#d6a84b"; ctx.fillRect(x, y, 115, 7); y += 48; ctx.fillStyle = "#344b5a"; ctx.font = "500 30px Roboto, Arial, sans-serif"; drawJustifiedText(ctx, data.description, x, y, width, 44, 7);
+    ctx.fillStyle = "#edf3f6"; ctx.fillRect(0, 948, canvas.width, 132); ctx.fillStyle = "#234d6f"; ctx.font = "800 27px Roboto, Arial, sans-serif"; ctx.fillText(data.stat, 56, 1011);
+    ctx.fillStyle = "#5a7180"; ctx.font = "700 25px Roboto, Arial, sans-serif"; ctx.textAlign = "right"; ctx.fillText(media.length > 1 ? (index + 1) + " / " + media.length + " T\u01af LI\u1ec6U" : "01 T\u01af LI\u1ec6U", 1742, 1011); ctx.textAlign = "left";
+    texture.needsUpdate = true; requestRender?.(); };
+  drawEmpty();
+  return { texture, show(data, media, index = 0) { const currentToken = ++token; const item = media[index]; drawContent(data, media, index, null); if (!item?.displayPath) return;
+      const image = new Image(); image.onload = () => { if (!disposed && currentToken === token) drawContent(data, media, index, image); }; image.onerror = () => { if (!disposed && currentToken === token) drawContent(data, media, index, null); }; image.src = sourceUrl(item.displayPath); },
+    dispose() { disposed = true; token++; texture.dispose(); } };
 }
 export function buildInternationalMapBoard({ parent, addTextPanel, registerInteractive, renderer, requestRender }) {
   const root = new THREE.Group(); root.name = "hnue-international-map-board";
   root.position.set(0, 10.75, .10); parent.add(root);
   addFramedPanel(root, 56, 22, 0);
 
-  const header = new THREE.Mesh(new THREE.BoxGeometry(54.9, 2.65, .075), panelMaterial(COLORS.navy, { metalness: .18, roughness: .46 }));
+  const header = new THREE.Mesh(new THREE.BoxGeometry(54.9, 2.65, .075), panelMaterial(0x0b5e9c, { metalness: .18, roughness: .46 }));
   header.position.set(0, 9.15, .31); root.add(header);
   const goldAccent = new THREE.Mesh(new THREE.BoxGeometry(44.8, .12, .03), new THREE.MeshBasicMaterial({ color: COLORS.gold }));
   goldAccent.position.set(5.0, 7.88, .37); root.add(goldAccent);
-  addTextPanel("HỘI NHẬP QUỐC TẾ", [0, 9.56, .37], [34, 1.32], 0, {
-    size: 116, minFontSize: 94, color: "#FFFFFF", background: "transparent", border: false,
-    weight: 900, wrap: false, width: 6600, height: 250, lineHeight: 132, unlit: true
+  addTextPanel("HỘI NHẬP QUỐC TẾ", [0, 9.15, .37], [34, 1.32], 0, {
+    size: 150, minFontSize: 130, color: "#FFFFFF", background: "transparent", border: false,
+    weight: 900, wrap: false, width: 6600, height: 250, lineHeight: 165, unlit: true
   }, root);
-  addTextPanel("KẾT NỐI TRI THỨC · MỞ RỘNG TẦM NHÌN · CÙNG KIẾN TẠO TƯƠNG LAI", [0, 8.35, .37], [52, .58], 0, {
-    size: 46, minFontSize: 40, color: "#FFFFFF", background: "transparent", border: false,
-    weight: 900, wrap: false, width: 8000, height: 92, lineHeight: 56, unlit: true
-  }, root);
+
 
   const mapRoot = new THREE.Group(); mapRoot.position.set(-8.85, -.15, .35); root.add(mapRoot);
   addFramedPanel(mapRoot, 37.5, 15.3, 0);
@@ -334,21 +301,28 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
 
   const infoRoot = new THREE.Group(); infoRoot.position.set(19.0, -.15, .35); root.add(infoRoot);
   addFramedPanel(infoRoot, 16.4, 15.3, 0);
-  const imageFrame = new THREE.Mesh(new THREE.BoxGeometry(15.85, 14.75, .045), panelMaterial(COLORS.navy, { metalness: .12, roughness: .5 }));
-  imageFrame.position.set(0, 0, .22); infoRoot.add(imageFrame);
-  const imageTrim = new THREE.Mesh(new THREE.BoxGeometry(15.55, 14.4, .035), panelMaterial(COLORS.gold, { metalness: .36, roughness: .34 }));
-  imageTrim.position.set(0, 0, .255); infoRoot.add(imageTrim);
-  const imageBacking = new THREE.Mesh(new THREE.BoxGeometry(15.22, 14.05, .03), new THREE.MeshBasicMaterial({ color: COLORS.white }));
-  imageBacking.position.set(0, 0, .285); infoRoot.add(imageBacking);
-  const imageMat = new THREE.MeshBasicMaterial({ color: COLORS.white, side: THREE.DoubleSide });
-  const imageMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), imageMat); imageMesh.position.set(0, 0, .31); infoRoot.add(imageMesh);
-  const slideshowPaths = INTERNATIONAL_CONNECTIONS.filter(data=>Number.isFinite(data.topic)).map(imageForData).filter(Boolean);
-  const slideshow = createContinuousSlideshow(slideshowPaths, requestRender);
-  imageMat.map = slideshow.texture; imageMat.needsUpdate = true;
-  imageMesh.scale.set(14.9, 13.85, 1);
-  const infoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.white, transparent: true, opacity: 0 }));
-  infoMesh.position.set(0, 0, -.1); infoRoot.add(infoMesh);
 
+  // Wall-mounted television housing for contextual information from the gold markers.
+  const tvGlow = new THREE.Mesh(new THREE.PlaneGeometry(16.0, 10.75), new THREE.MeshBasicMaterial({ color: 0xdbe7ec, transparent: true, opacity: .22, depthWrite: false }));
+  tvGlow.position.set(0, .35, .225); infoRoot.add(tvGlow);
+  const tvRear = new THREE.Mesh(new THREE.BoxGeometry(15.5, 10.15, .42), panelMaterial(0x17222a, { metalness: .48, roughness: .35 }));
+  tvRear.position.set(0, .35, .34); infoRoot.add(tvRear);
+  const tvShell = new THREE.Mesh(new THREE.BoxGeometry(15.78, 10.35, .30), panelMaterial(0x26343d, { metalness: .55, roughness: .3 }));
+  tvShell.position.set(0, .35, .58); infoRoot.add(tvShell);
+  const tvBezel = new THREE.Mesh(new THREE.BoxGeometry(15.20, 9.55, .16), panelMaterial(0x090e12, { metalness: .24, roughness: .24 }));
+  tvBezel.position.set(0, .62, .79); infoRoot.add(tvBezel);
+  const infoScreen = createInfoScreen(requestRender);
+  const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(14.75, 8.85), new THREE.MeshBasicMaterial({ map: infoScreen.texture, toneMapped: false }));
+  screenMesh.position.set(0, .72, .90); infoRoot.add(screenMesh);
+  const tvAccent = new THREE.Mesh(new THREE.BoxGeometry(10.7, .09, .05), panelMaterial(COLORS.gold, { metalness: .7, roughness: .25 }));
+  tvAccent.position.set(0, -4.67, .80); infoRoot.add(tvAccent);
+  const statusLed = new THREE.Mesh(new THREE.CircleGeometry(.075, 20), new THREE.MeshBasicMaterial({ color: 0x7ed6a7 }));
+  statusLed.position.set(6.88, -4.62, .91); infoRoot.add(statusLed);
+  const navMaterial = new THREE.MeshStandardMaterial({ color: 0xd6a84b, emissive: 0x4d3510, emissiveIntensity: .18, roughness: .35, metalness: .5, transparent: true, opacity: .35 });
+  const prevButton = new THREE.Mesh(new THREE.CircleGeometry(.29, 28), navMaterial.clone()); prevButton.position.set(-6.86, -4.61, .92); infoRoot.add(prevButton);
+  const nextButton = new THREE.Mesh(new THREE.CircleGeometry(.29, 28), navMaterial.clone()); nextButton.position.set(-6.10, -4.61, .92); infoRoot.add(nextButton);
+  addTextPanel("\u2039", [-6.86,-4.61,.94], [.42,.42], 0, { size:72,minFontSize:64,color:"#172032",background:"transparent",border:false,weight:900,wrap:false,width:160,height:160,unlit:true }, infoRoot);
+  addTextPanel("\u203a", [-6.10,-4.61,.94], [.42,.42], 0, { size:72,minFontSize:64,color:"#172032",background:"transparent",border:false,weight:900,wrap:false,width:160,height:160,unlit:true }, infoRoot);
   const routeEntries = new Map(); const markerEntries = new Map();
   const [hx, hy] = mapPoint(HNUE.lon, HNUE.lat);
   const routeOffsets = { france: 1.35, singapore: -1.0, japan: 1.2, korea: .78, china: .48, taiwan: -.22, philippines: -.72 };
@@ -370,41 +344,35 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
     weight: 900, wrap: false, width: 1500, height: 240, strokeColor: "#FFFFFF", unlit: true
   }, mapRoot);
 
-  let selectedCountry = "singapore"; let disposed = false; let infoTexture = null;
-  const textureCache = new Map(); const interactiveMeshes = [];
-  const textureLoader = new THREE.TextureLoader(); let imageRequestToken = 0;
+  let selectedCountry = null; let disposed = false; let currentMedia = []; let mediaIndex = 0;
+  const interactiveMeshes = [];
 
-  function updateImage(data) {
-    const path = imageForData(data); if (!path) return;
-    const apply = texture => {
-      if (disposed || selectedCountry !== data.id) return;
-      imageMat.map = texture; imageMat.color.setHex(COLORS.white); imageMat.needsUpdate = true;
-      const aspect = texture.image?.width && texture.image?.height ? texture.image.width / texture.image.height : 16 / 9;
-      const maxW = 14.9, maxH = 13.85, drawW = Math.min(maxW, maxH * aspect);
-      imageMesh.scale.set(drawW, drawW / aspect, 1); requestRender?.();
-    };
-    if (textureCache.has(path)) { apply(textureCache.get(path)); return; }
-    const token = ++imageRequestToken;
-    const texture = textureLoader.load(sourceUrl(path), () => {
-      if (disposed) { texture.dispose(); return; }
-      textureCache.set(path, texture); if (token === imageRequestToken) apply(texture);
-    });
-    texture.colorSpace = THREE.SRGBColorSpace; texture.minFilter = THREE.LinearMipmapLinearFilter;
-    texture.magFilter = THREE.LinearFilter; texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+  function refreshNavigation() {
+    const enabled = currentMedia.length > 1;
+    prevButton.material.opacity = enabled ? 1 : .35; nextButton.material.opacity = enabled ? 1 : .35;
+    prevButton.material.needsUpdate = true; nextButton.material.needsUpdate = true;
   }
 
+  function cycleMedia(direction) {
+    if (!selectedCountry || currentMedia.length < 2) return;
+    mediaIndex = (mediaIndex + direction + currentMedia.length) % currentMedia.length;
+    const data = INTERNATIONAL_CONNECTIONS.find(item => item.id === selectedCountry);
+    if (data) infoScreen.show(data, currentMedia, mediaIndex);
+  }
+
+  prevButton.userData = { kind: "sceneAction", action: () => cycleMedia(-1) };
+  nextButton.userData = { kind: "sceneAction", action: () => cycleMedia(1) };
+  registerInteractive(prevButton); registerInteractive(nextButton); interactiveMeshes.push(prevButton, nextButton);
+
   function selectCountry(id) {
-    const data = INTERNATIONAL_CONNECTIONS.find(item => item.id === id); if (!data) return;
-    selectedCountry = id;
+    const data = INTERNATIONAL_CONNECTIONS.find(item => item.id === id && Number.isFinite(item.topic)); if (!data) return;
+    selectedCountry = id; currentMedia = mediaForData(data); mediaIndex = 0;
     for (const item of INTERNATIONAL_CONNECTIONS) {
-      const active = item.id === id; const marker = markerEntries.get(item.id); const route = routeEntries.get(item.id);
-      const verified=Number.isFinite(item.topic);
-      marker.material.color.setHex(active ? COLORS.red : (verified?COLORS.gold:COLORS.blue)); marker.scale.setScalar(active ? 1.28 : 1);
-      route.material.color.setHex(active ? COLORS.red : (verified?COLORS.gold:COLORS.blue)); route.material.opacity = active ? 1 : (verified?.62:.35);
+      const active = item.id === id; const marker = markerEntries.get(item.id); const route = routeEntries.get(item.id); const verified = Number.isFinite(item.topic);
+      marker.material.color.setHex(active ? COLORS.red : (verified ? COLORS.gold : COLORS.blue)); marker.scale.setScalar(active ? 1.28 : 1);
+      route.material.color.setHex(active ? COLORS.red : (verified ? COLORS.gold : COLORS.blue)); route.material.opacity = active ? 1 : (verified ? .62 : .35);
     }
-    infoTexture?.dispose(); infoTexture = createInfoTexture(data);
-    infoMesh.material.map = infoTexture; infoMesh.material.needsUpdate = true;
-    requestRender?.();
+    infoScreen.show(data, currentMedia, mediaIndex); refreshNavigation(); requestRender?.();
   }
 
   for (const data of INTERNATIONAL_CONNECTIONS) {
@@ -426,7 +394,7 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
     borderWidth:12,weight:900,wrap:false,width:4600,height:310,lineHeight:96,unlit:true
   }, root);
 
-  // The full-width slideshow is the sole presentation surface; no country is selected by default.
+  // The screen remains idle until the visitor deliberately selects a verified gold marker.
   const abortController = new AbortController();
   fetch(MAP_SOURCE, { signal: abortController.signal }).then(response => {
     if (!response.ok) throw new Error(`Map data ${response.status}`); return response.json();
@@ -435,11 +403,11 @@ export function buildInternationalMapBoard({ parent, addTextPanel, registerInter
   });
 
   const controller = {
-    sync() { slideshow.step(); },
+    sync() {},
     dispose() {
-      if (disposed) return; disposed = true; abortController.abort(); imageRequestToken++;
+      if (disposed) return; disposed = true; abortController.abort();
       interactiveMeshes.forEach(mesh => { mesh.userData.action = () => {}; });
-      infoTexture?.dispose(); slideshow.dispose(); mapBundle.texture.dispose(); textureCache.forEach(texture => texture.dispose()); textureCache.clear();
+      infoScreen.dispose(); mapBundle.texture.dispose();
       root.traverse(object => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];

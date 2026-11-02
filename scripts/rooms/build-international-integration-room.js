@@ -49,7 +49,7 @@ function addZoneFrame(parent,{x=0,y=10,width,height}){
   group.add(outer,gold,face);return group;
 }
 function artifactPages(items){
-  return uniqueEvents(items).map(item=>({id:item.id,
+  return items.filter(item=>item.mediaType==='image'&&!item.isDuplicate&&SUPPORTED_IMAGE.has(item.extension)).map(item=>({id:item.id,
     title:item.title,kicker:[item.year,item.person].filter(Boolean).join(" · "),
     description:item.caption,image:sourceUrl(item.displayPath),layout:"image-top"
   }));
@@ -143,9 +143,6 @@ function sectionLabel(addTextPanel,parent,text,x,y,width,textureWidth=1600,fontS
   goldAccent.position.set(x+width*.08,y-.41,.225);
   parent.add(redAccent,goldAccent);
   return panel;
-}
-function conceptLine(addTextPanel,parent,text,y=15.55,width=29){
-  return addTextPanel(text,[0,y,.21],[width,.72],0,{size:39,minFontSize:31,color:"#234D6F",background:"#FFFFFF",border:false,weight:800,wrap:false,width:2800,height:220,lineHeight:48,unlit:true},parent);
 }
 function addGrid(ctx,wall,items,{x0,x1,y0,y1,cols,rows,alignLastRow=false}){
   if(!items.length)return;
@@ -263,14 +260,12 @@ export function buildInternationalIntegrationRoom({
   const contextFor=zone=>({renderer,addTextPanel,registerArtifact,registerInteractive,requestRender,setVideoActive,loaders:mounted[zone].userData.loaders});
   const northSide=mounted["north-side"],northSideCtx=contextFor("north-side");
   const studyAndExchange=selected("study");
-  titlePanel(addTextPanel,northSide,"HỌC TẬP VÀ TRAO ĐỔI QUỐC TẾ",17.5,34);
-  conceptLine(addTextPanel,northSide,"HỌC BỔNG · TRAO ĐỔI SINH VIÊN · CHƯƠNG TRÌNH HỌC TẬP QUỐC TẾ");
+  titlePanel(addTextPanel,northSide,"HỌC TẬP VÀ TRAO ĐỔI QUỐC TẾ",19.54);
   addGrid(northSideCtx,northSide,studyAndExchange,{x0:-15.9,x1:15.9,y0:4.45,y1:14.45,cols:5,rows:3,alignLastRow:true});
 
   const northRear=mounted["north-rear"],northRearCtx=contextFor("north-rear");
   const studentExperiences=selected("experience");
-  titlePanel(addTextPanel,northRear,"TRẢI NGHIỆM QUỐC TẾ CỦA SINH VIÊN HNUE",17.65,31);
-  conceptLine(addTextPanel,northRear,"HỌC TẬP · HOẠT ĐỘNG TẬP THỂ · THÍCH NGHI VỚI MÔI TRƯỜNG MỚI",15.65);
+  titlePanel(addTextPanel,northRear,"TRẢI NGHIỆM QUỐC TẾ CỦA SINH VIÊN HNUE",19.54);
   addGrid(northRearCtx,northRear,studentExperiences,{x0:-15.9,x1:15.9,y0:4.15,y1:14.55,cols:5,rows:3,alignLastRow:true});
 
   const east=mounted["east-center"];
@@ -278,14 +273,12 @@ export function buildInternationalIntegrationRoom({
 
   const southRear=mounted["south-rear"],southRearCtx=contextFor("south-rear");
   const languageAndCulture=selected("culture");
-  titlePanel(addTextPanel,southRear,"GIAO LƯU NGÔN NGỮ VÀ VĂN HÓA",17.5,31);
-  conceptLine(addTextPanel,southRear,"NGÔN NGỮ · VĂN HÓA · GẶP GỠ · ĐỐI THOẠI");
+  titlePanel(addTextPanel,southRear,"GIAO LƯU NGÔN NGỮ VÀ VĂN HÓA",19.54);
   addGrid(southRearCtx,southRear,languageAndCulture,{x0:-15.9,x1:15.9,y0:4.25,y1:14.45,cols:5,rows:3,alignLastRow:true});
 
   const southSide=mounted["south-side"],southSideCtx=contextFor("south-side");
   const internationalCooperation=selected("cooperation");
-  titlePanel(addTextPanel,southSide,"KẾT NỐI VÀ HỢP TÁC QUỐC TẾ",17.5,34);
-  conceptLine(addTextPanel,southSide,"HỢP TÁC HỌC THUẬT · GIAO LƯU CHUYÊN MÔN · KẾT NỐI ĐỐI TÁC");
+  titlePanel(addTextPanel,southSide,"KẾT NỐI VÀ HỢP TÁC QUỐC TẾ",19.54);
   addGrid(southSideCtx,southSide,internationalCooperation,{x0:-15.9,x1:15.9,y0:4.45,y1:14.4,cols:5,rows:3,alignLastRow:true});
 
   const lazyController=zoneLoaderController(loadZones);

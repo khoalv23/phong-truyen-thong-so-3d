@@ -16,12 +16,64 @@ function isBookArtifact(item) {
 
 export function initArtifactModal(modalElements) {
   elements = modalElements;
+  elements.image.addEventListener("load", syncArtifactLayout);
+  window.addEventListener("resize", syncArtifactLayout);
+}
+
+function syncArtifactLayout() {
+  if (!elements || !elements.modal.classList.contains("is-open")) return;
+  requestAnimationFrame(() => {
+    const panel = elements.modal.querySelector(".modal-panel");
+    const body = elements.modal.querySelector(".modal-body");
+    const copy = elements.modal.querySelector(".modal-copy");
+    if (!panel || !body || !copy || elements.imageWrap.hidden) return;
+
+    if (window.matchMedia("(max-width: 850px)").matches) {
+      panel.style.removeProperty("width");
+      body.style.removeProperty("width");
+      elements.image.style.removeProperty("--image-width");
+      copy.style.removeProperty("height");
+      copy.style.removeProperty("--copy-width");
+      panel.style.removeProperty("--artifact-left");
+      return;
+    }
+
+    const aspect = elements.image.naturalWidth && elements.image.naturalHeight
+      ? elements.image.naturalWidth / elements.image.naturalHeight
+      : 1.4;
+    const heightLimit = Math.min(window.innerHeight * .58, 620);
+    const projectedImageWidth = Math.min(elements.image.naturalWidth || 720, heightLimit * aspect);
+    const availableWidth = Math.min(window.innerWidth - 64, 1100);
+    const dynamicCopyWidth = Math.max(250, Math.min(350, projectedImageWidth * .36, availableWidth * .33));
+    const imageWidth = Math.max(180, Math.min(projectedImageWidth, availableWidth - dynamicCopyWidth - 7));
+    const groupWidth = imageWidth + dynamicCopyWidth + 7;
+
+    elements.image.style.setProperty("--image-width", Math.round(imageWidth) + "px");
+    copy.style.setProperty("--copy-width", Math.round(dynamicCopyWidth) + "px");
+    body.style.width = Math.round(groupWidth) + "px";
+    panel.style.width = Math.round(groupWidth + 24) + "px";
+
+    requestAnimationFrame(() => {
+      const imageRect = elements.imageWrap.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      copy.style.height = Math.round(imageRect.height) + "px";
+      panel.style.setProperty("--artifact-left", Math.max(0, imageRect.left - panelRect.left) + "px");
+    });
+  });
 }
 
 export function registerArtifact(item) {
   const id = `art-${artifactSeq++}`;
   artifacts.set(id, item);
   return id;
+}
+
+function renderArtifactTitle(value) {
+  const title = value || "";
+  elements.title.textContent = title;
+  const length = Array.from(title).length;
+  elements.title.classList.toggle("is-long", length > 90 && length <= 145);
+  elements.title.classList.toggle("is-extra-long", length > 145);
 }
 
 export function openArtifact(id) {
@@ -32,12 +84,14 @@ export function openArtifact(id) {
   scheduleIdleReturn(item);
   activePageIndex = Math.max(0, Math.min(item.pages?.length - 1 || 0, item.initialPage ?? 0));
   const bookMode = isBookArtifact(item);
+  const panel = elements.modal.querySelector(".modal-panel");
   elements.bookReader.hidden = !bookMode;
   elements.imageWrap.hidden = bookMode;
   elements.info.hidden = bookMode;
-  elements.modal.querySelector(".modal-panel").classList.toggle("is-book-mode", bookMode);
+  panel.classList.toggle("is-book-mode", bookMode);
 
   if (bookMode) {
+    panel.style.removeProperty("width");
     renderBookSpread(item);
     elements.modal.classList.add("is-open");
     return;
@@ -45,14 +99,13 @@ export function openArtifact(id) {
 
   elements.image.src = item.image;
   elements.image.alt = item.title;
-  elements.title.textContent = item.title;
+  renderArtifactTitle(item.title);
   elements.description.textContent = item.description;
-  elements.year.textContent = item.group || "Chủ đề 4";
-  elements.source.textContent = item.source || "Đoàn TNCS Hồ Chí Minh - Trường ĐHSP Hà Nội";
   elements.pageControls.hidden = !activePagedArtifact;
   if (activePagedArtifact) renderArtifactPage(item);
   elements.image.classList.remove("is-zoomed");
   elements.modal.classList.add("is-open");
+  syncArtifactLayout();
 }
 
 export function closeArtifactModal() {
@@ -90,9 +143,10 @@ function renderArtifactPage(item) {
   if (!page || !elements) return;
 
   elements.image.src = page.image || item.image;
-  elements.image.alt = `${item.title} - Trang ${activePageIndex + 1}`;
+  elements.image.alt = page.title || item.title;
+  renderArtifactTitle(page.title || item.title);
   elements.description.textContent = page.description || item.description;
-  elements.pageIndicator.textContent = `Trang ${activePageIndex + 1} / ${item.pages.length}`;
+  elements.pageIndicator.textContent = `Ảnh ${activePageIndex + 1} / ${item.pages.length}`;
   elements.prevPageBtn.disabled = activePageIndex === 0;
   elements.nextPageBtn.disabled = activePageIndex === item.pages.length - 1;
 }

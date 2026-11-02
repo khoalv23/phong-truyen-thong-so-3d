@@ -434,7 +434,7 @@ function createInternationalStyleRaisedTitle(text, position, size, rotationY = 0
   group.position.set(...position);
   group.rotation.y = rotationY;
   parent.add(group);
-  const navy = new THREE.MeshStandardMaterial({ color: 0x234d6f, roughness: .46, metalness: .18 });
+  const navy = new THREE.MeshStandardMaterial({ color: 0x0b5e9c, roughness: .46, metalness: .18 });
   const gold = new THREE.MeshStandardMaterial({ color: 0xd6a84b, roughness: .34, metalness: .42 });
   const red = new THREE.MeshStandardMaterial({ color: 0x982f35, roughness: .48, metalness: .10 });
   const backing = new THREE.Mesh(new THREE.BoxGeometry(w + .32, h + .26, .15), new THREE.MeshStandardMaterial({ color: 0x142c40, roughness: .56, metalness: .14 }));
@@ -445,7 +445,7 @@ function createInternationalStyleRaisedTitle(text, position, size, rotationY = 0
   trim.position.z = .19;
   group.add(backing, face, trim);
   const textPanel = addTextPanel(text, [0, .05, .225], [w * .91, h * .63], 0, {
-    size: 220, color: "#FFFFFF", background: "transparent", border: false, weight: 900,
+    size: 260, color: "#FFFFFF", background: "transparent", border: false, weight: 900,
     wrap: false, width: 4200, height: 900, strokeColor: "#d6a84b", strokeWidth: 7,
     depthWrite: false, depthTest: true
   }, group);
@@ -3485,26 +3485,35 @@ function createSouthEntranceWoodenDoor(pA, pB, height = CEIL_H, thickness = WALL
   if (span < .1) return;
 
   const group = new THREE.Group();
+  group.name = "south-entrance-closed-wooden-door";
   group.position.set((pA[0] + pB[0]) / 2, 0, (pA[1] + pB[1]) / 2);
   group.rotation.y = Math.atan2(spanZ, spanX);
   scene.add(group);
 
-  const frameWood = new THREE.MeshStandardMaterial({ color: 0x3c1d0e, roughness: .42, metalness: .04 });
-  const doorWood = new THREE.MeshStandardMaterial({ color: 0x70401f, roughness: .48, metalness: .03 });
-  const panelWood = new THREE.MeshStandardMaterial({ color: 0x9a6234, roughness: .44, metalness: .02 });
-  const brass = new THREE.MeshStandardMaterial({ color: 0xc79a45, roughness: .28, metalness: .72 });
+  const woodGrain = makeWoodGrainTexture();
+  woodGrain.repeat.set(2.4, 5.2);
+  const panelGrain = woodGrain.clone();
+  panelGrain.repeat.set(1.4, 2.4);
+  panelGrain.needsUpdate = true;
+
+  const frameWood = new THREE.MeshStandardMaterial({ map: woodGrain, color: 0x4a3021, roughness: .62, metalness: 0 });
+  const doorWood = new THREE.MeshStandardMaterial({ map: woodGrain, color: 0x765038, roughness: .58, metalness: 0 });
+  const panelWood = new THREE.MeshStandardMaterial({ map: panelGrain, color: 0x8b6244, roughness: .54, metalness: 0 });
+  const insetWood = new THREE.MeshStandardMaterial({ map: panelGrain, color: 0x5f3e2b, roughness: .64, metalness: 0 });
+  const brass = new THREE.MeshStandardMaterial({ color: 0xb88a45, roughness: .38, metalness: .68 });
   const frameDepth = thickness + .14;
   const headerHeight = .62;
   const sillHeight = .24;
   const doorHeight = height - headerHeight - sillHeight;
   const framePostWidth = .34;
   const clearWidth = span - framePostWidth * 2;
-  const leafGap = .18;
+  const leafGap = .07;
   const leafWidth = (clearWidth - leafGap) / 2;
   const leafDepth = Math.min(.26, thickness * .42);
 
-  const add = (geometry, material, x, y, z) => {
+  const add = (geometry, material, x, y, z, name = "") => {
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = name;
     mesh.position.set(x, y, z);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -3512,35 +3521,89 @@ function createSouthEntranceWoodenDoor(pA, pB, height = CEIL_H, thickness = WALL
     return mesh;
   };
 
-  // No vertical jambs at floor level: the white base-tile run can meet cleanly
-  // at the starting entrance without being visually blocked.
-  add(new THREE.BoxGeometry(clearWidth, headerHeight, frameDepth), frameWood, 0, height - headerHeight / 2, 0);
-  add(new THREE.BoxGeometry(clearWidth, sillHeight, frameDepth), frameWood, 0, sillHeight / 2, 0);
+  // Retain the exact existing opening; only the door leaves are redesigned.
+  add(new THREE.BoxGeometry(clearWidth, headerHeight, frameDepth), frameWood, 0, height - headerHeight / 2, 0, "wooden-door-header");
+  add(new THREE.BoxGeometry(clearWidth, sillHeight, frameDepth), frameWood, 0, sillHeight / 2, 0, "wooden-door-sill");
+  [-1, 1].forEach(side => {
+    add(
+      new THREE.BoxGeometry(framePostWidth, doorHeight, frameDepth),
+      frameWood,
+      side * (span / 2 - framePostWidth / 2),
+      sillHeight + doorHeight / 2,
+      0,
+      side < 0 ? "wooden-door-left-jamb" : "wooden-door-right-jamb"
+    );
+  });
 
   [-1, 1].forEach(side => {
     const leafCenterX = side * (leafGap / 2 + leafWidth / 2);
-    add(new THREE.BoxGeometry(leafWidth, doorHeight, leafDepth), doorWood, leafCenterX, sillHeight + doorHeight / 2, 0);
+    add(
+      new THREE.BoxGeometry(leafWidth, doorHeight, leafDepth),
+      doorWood,
+      leafCenterX,
+      sillHeight + doorHeight / 2,
+      0,
+      side < 0 ? "wooden-door-left-leaf" : "wooden-door-right-leaf"
+    );
 
-    // Hai pano nổi bằng gỗ ở cả hai mặt cánh cửa.
     [-1, 1].forEach(face => {
       const panelDepth = leafDepth / 2 + .028;
-      [doorHeight * .29, doorHeight * .71].forEach(offsetY => {
+      const panels = [
+        { center: .17, height: .22 },
+        { center: .50, height: .34 },
+        { center: .83, height: .22 }
+      ];
+      panels.forEach(({ center, height: panelHeightRatio }, panelIndex) => {
+        const panelHeight = doorHeight * panelHeightRatio;
         add(
-          new THREE.BoxGeometry(leafWidth - .58, doorHeight * .31, .052),
+          new THREE.BoxGeometry(leafWidth - .54, panelHeight, .052),
           panelWood,
           leafCenterX,
-          sillHeight + offsetY,
-          face * panelDepth
+          sillHeight + doorHeight * center,
+          face * panelDepth,
+          `wooden-door-raised-panel-${side}-${face}-${panelIndex}`
+        );
+        add(
+          new THREE.BoxGeometry(leafWidth - .82, panelHeight - .28, .026),
+          insetWood,
+          leafCenterX,
+          sillHeight + doorHeight * center,
+          face * (panelDepth + .039),
+          `wooden-door-inset-panel-${side}-${face}-${panelIndex}`
         );
       });
     });
   });
 
-  // Tay nắm đồng đặt ở mép gặp nhau của hai cánh, có mặt trong và mặt ngoài.
+  // A narrow wooden astragal conceals the technical seam and makes the fixed closed state explicit.
+  [-1, 1].forEach(face => {
+    add(
+      new THREE.BoxGeometry(.16, doorHeight - .12, .055),
+      frameWood,
+      0,
+      sillHeight + doorHeight / 2,
+      face * (leafDepth / 2 + .034),
+      `wooden-door-center-astragal-${face}`
+    );
+  });
+
+  // Brushed-brass pull handles remain decorative; the door has no interaction or opening state.
   [-1, 1].forEach(face => {
     [-1, 1].forEach(side => {
-      const handle = new THREE.Mesh(new THREE.CylinderGeometry(.065, .065, .78, 16), brass);
-      handle.position.set(side * .23, sillHeight + doorHeight * .51, face * (leafDepth / 2 + .09));
+      const handleX = side * .25;
+      const handleY = sillHeight + doorHeight * .51;
+      const handleZ = face * (leafDepth / 2 + .12);
+      add(
+        new THREE.BoxGeometry(.18, 1.7, .055),
+        brass,
+        handleX,
+        handleY,
+        face * (leafDepth / 2 + .065),
+        `wooden-door-handle-backplate-${side}-${face}`
+      );
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(.075, .075, 1.34, 18), brass);
+      handle.name = `wooden-door-handle-${side}-${face}`;
+      handle.position.set(handleX, handleY, handleZ);
       handle.castShadow = true;
       group.add(handle);
     });
@@ -3667,13 +3730,6 @@ function createMergedEastRoomIdentity() {
     [R_OUT - WALL_T - .18, CEIL_H - 2.35, 0],
     [16.4, 2.10],
     -Math.PI / 2
-  );
-  addTextPanel(
-    "KẾT NỐI TRI THỨC · MỞ RỘNG TẦM NHÌN · CÙNG KIẾN TẠO TƯƠNG LAI",
-    [R_OUT - WALL_T - .12, CEIL_H - 4.35, 0],
-    [15.2, .5],
-    -Math.PI / 2,
-    { size: 18, color: "#334155", background: "transparent", border: false, weight: 800, width: 1800, height: 180 }
   );
 }
 function createMergedEastDropCeiling(outline) {

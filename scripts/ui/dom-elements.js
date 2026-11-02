@@ -9,8 +9,6 @@ export const artifactModalElements = {
   info: document.getElementById("modal-info"),
   title: document.getElementById("modal-title"),
   description: document.getElementById("modal-description"),
-  year: document.getElementById("modal-year"),
-  source: document.getElementById("modal-source"),
   pageControls: document.getElementById("modal-page-controls"),
   prevPageBtn: document.getElementById("modal-prev-page"),
   nextPageBtn: document.getElementById("modal-next-page"),

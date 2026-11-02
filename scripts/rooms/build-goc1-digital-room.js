@@ -385,7 +385,7 @@ function buildTeamTimelineWallArchive({ root, renderer, addTextPanel, registerAr
   items.forEach(item => {
     const panel = SectionPanel(board, { position: [item.x, -.15, .22], size: [9.65, 10.9], mountZ: 0 });
     SectionHeader(addTextPanel, panel, item.title, 4.75, 9.05);
-    FramedImage({ parent: panel, source: item.source, title: item.caption, description: item.caption, position: [0, .55, .26], size: [8.1, 5.45], renderer, registerArtifact, registerInteractive });
+    FramedImage({ parent: panel, source: item.source, title: item.caption, description: 'Tư liệu minh họa chủ đề ' + item.title.toLocaleLowerCase('vi-VN') + ' trong hành trình triển khai phong trào Bình dân học vụ số.', position: [0, .55, .26], size: [8.1, 5.45], renderer, registerArtifact, registerInteractive });
     CaptionBar(addTextPanel, panel, item.caption, -3.65, 8.8);
   });
 }
@@ -401,7 +401,7 @@ function buildCommunityWallArchive({ root, renderer, addTextPanel, registerArtif
     { x: 11.7, source: "", caption: "Ph\u1ed1i h\u1ee3p h\u1ed7 tr\u1ee3 c\u00f9ng l\u1ef1c l\u01b0\u1ee3ng c\u00f4ng an" }
   ];
   slots.forEach(slot => {
-    FramedImage({ parent: board, source: slot.source, title: slot.caption, description: slot.caption, position: [slot.x, .65, .26], size: [6.75, 5.45], renderer, registerArtifact, registerInteractive });
+    FramedImage({ parent: board, source: slot.source, title: slot.caption, description: 'Tư liệu ghi lại hoạt động phối hợp và hỗ trợ cộng đồng trong chương trình chuyển đổi số của tuổi trẻ HNUE.', position: [slot.x, .65, .26], size: [6.75, 5.45], renderer, registerArtifact, registerInteractive });
     CaptionBar(addTextPanel, board, slot.caption, -3.5, 7.0, slot.x);
   });
   return null;
@@ -499,7 +499,7 @@ function buildDigitalResilienceWallArchive({ root, renderer, addTextPanel, regis
     const panel = SectionPanel(board, { position: [x, -.15, .22], size: [9.35, 10.9], mountZ: 0 });
     SectionHeader(addTextPanel, panel, section.title, 4.75, 8.75);
     const imageSize = section.type === "phone" ? [4.2, 5.9] : [7.7, 4.8];
-    FramedImage({ parent: panel, source: section.source, title: section.caption, description: section.caption, position: [0, .65, .26], size: imageSize, frameType: section.type, renderer, registerArtifact, registerInteractive });
+    FramedImage({ parent: panel, source: section.source, title: section.caption, description: 'Hình ảnh minh họa nội dung ' + section.title.toLocaleLowerCase('vi-VN') + ' trên nền tảng số của HNUE.', position: [0, .65, .26], size: imageSize, frameType: section.type, renderer, registerArtifact, registerInteractive });
     CaptionBar(addTextPanel, panel, section.caption, -3.75, 8.4);
   });
 }
@@ -513,26 +513,65 @@ function addSelectedVideoFrame({ parent, item, position, size, renderer, addText
   group.position.set(...position);
   parent.add(group);
   const [width, height] = size;
-  const outer = new THREE.Mesh(new THREE.BoxGeometry(width + .28, height + .28, .075), FRAME_MAT);
-  outer.position.z = .035;
-  const gold = new THREE.Mesh(new THREE.BoxGeometry(width + .12, height + .12, .032), FRAME_MAT);
-  gold.position.z = .082;
-  const matte = new THREE.Mesh(new THREE.BoxGeometry(width, height, .018), BOARD_MAT);
-  matte.position.z = .108;
+  const tvHeight = Math.min(height, width * 9 / 16);
+  const screenWidth = width - .42;
+  const screenHeight = tvHeight - .50;
+  const shellMaterial = new THREE.MeshStandardMaterial({ color: 0x111820, roughness: .46, metalness: .34 });
+  const bezelMaterial = new THREE.MeshStandardMaterial({ color: 0x20282f, roughness: .38, metalness: .42 });
+  const blackMaterial = new THREE.MeshBasicMaterial({ color: 0x05080b });
+  const brassMaterial = new THREE.MeshStandardMaterial({ color: 0xb88a45, roughness: .38, metalness: .64 });
+  const warmGlowMaterial = new THREE.MeshBasicMaterial({ color: 0xffd6a0, transparent: true, opacity: .13, depthWrite: false });
+
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(width + .72, tvHeight + .72), warmGlowMaterial);
+  glow.name = "vtv-warm-backlight";
+  glow.position.z = -.08;
+  const wallMount = new THREE.Mesh(new THREE.BoxGeometry(width * .28, tvHeight * .42, .18), shellMaterial);
+  wallMount.name = "vtv-wall-mount";
+  wallMount.position.z = -.01;
+  const rearShell = new THREE.Mesh(new THREE.BoxGeometry(width - .16, tvHeight - .14, .28), shellMaterial);
+  rearShell.name = "vtv-rear-shell";
+  rearShell.position.z = .13;
+  const bezel = new THREE.Mesh(new THREE.BoxGeometry(width, tvHeight, .12), bezelMaterial);
+  bezel.name = "vtv-graphite-bezel";
+  bezel.position.z = .29;
+  const screenBacking = new THREE.Mesh(new THREE.PlaneGeometry(screenWidth, screenHeight), blackMaterial);
+  screenBacking.name = "vtv-screen-backing";
+  screenBacking.position.set(0, .08, .356);
+  const brassAccent = new THREE.Mesh(new THREE.BoxGeometry(width * .60, .045, .025), brassMaterial);
+  brassAccent.name = "vtv-brass-bottom-accent";
+  brassAccent.position.set(0, -tvHeight / 2 + .16, .37);
+
   const poster = createImageTexture(item.posterPath, renderer);
   const screenMaterial = new THREE.MeshBasicMaterial({ map: poster, color: poster ? 0xffffff : 0x101820, side: THREE.DoubleSide });
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), screenMaterial);
+  screen.name = "vtv-video-screen";
   const fitScreen = aspect => {
-    const maxWidth = width - .12;
-    const maxHeight = height - .12;
+    const maxWidth = screenWidth;
+    const maxHeight = screenHeight;
     const drawWidth = Math.min(maxWidth, maxHeight * aspect);
     screen.scale.set(drawWidth, drawWidth / aspect, 1);
   };
-  const fitPoster = () => fitScreen(poster?.image?.width && poster?.image?.height ? poster.image.width / poster.image.height : width / height);
+  const fitPoster = () => fitScreen(poster?.image?.width && poster?.image?.height ? poster.image.width / poster.image.height : 16 / 9);
   if (poster) poster.onUpdate = fitPoster;
   fitPoster();
-  screen.position.z = .125;
-  group.add(outer, gold, matte, screen);
+  screen.position.set(0, .08, .365);
+  group.add(glow, wallMount, rearShell, bezel, screenBacking, brassAccent, screen);
+
+  [-1, 1].forEach(side => {
+    const speaker = new THREE.Mesh(new THREE.BoxGeometry(width * .13, .025, .018), blackMaterial);
+    speaker.name = side < 0 ? "vtv-left-speaker" : "vtv-right-speaker";
+    speaker.position.set(side * width * .30, -tvHeight / 2 + .16, .385);
+    group.add(speaker);
+  });
+  const statusLed = new THREE.Mesh(new THREE.CircleGeometry(.035, 16), new THREE.MeshBasicMaterial({ color: 0xffe3b4 }));
+  statusLed.name = "vtv-status-led";
+  statusLed.position.set(width / 2 - .25, -tvHeight / 2 + .16, .39);
+  group.add(statusLed);
+  addTextPanel("VTV1", [0, -tvHeight / 2 + .16, .39], [1.0, .26], 0, {
+    size: 38, minFontSize: 32, color: "#D7DCE0", background: "transparent",
+    border: false, weight: 700, wrap: false, width: 500, height: 120,
+    align: "center", unlit: true
+  }, group);
 
   const video = document.createElement("video");
   video.src = sourceUrl(item.displayPath);
@@ -668,11 +707,49 @@ function buildTeamTimelineWall({ root, renderer, addTextPanel, registerArtifact,
   root.add(wall);
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallB, position: [0, 19.54, .06] });
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
-  return addSelectedMediaGrid({
-    board, items: selectedMedia("movement"), cols: 3, cardSize: [8.4, 4.35],
-    stepX: 10.1, stepY: 5.0, renderer, addTextPanel, registerArtifact,
-    registerInteractive, requestRender, setVideoActive
-  });
+  const items = selectedMedia("movement");
+  const byNumber = number => items.find(item => item.number === number);
+  const launch = byNumber(19);
+  const outreach = byNumber(6);
+  const vtvStill = byNumber(17);
+  const reportVideo = byNumber(18);
+
+  const imagePanel = SectionPanel(board, { position: [-6.55, -.15, .22], size: [18.6, 10.9], mountZ: 0 });
+  const videoPanel = SectionPanel(board, { position: [9.55, -.15, .22], size: [12.4, 10.9], mountZ: 0 });
+
+  const addImage = (item, position, size) => {
+    if (!item) return;
+    FramedImage({
+      parent: imagePanel, source: item.displayPath, title: item.title, description: item.caption,
+      position, size, renderer, registerArtifact, registerInteractive
+    });
+  };
+
+  // Left zone: one leading image and two supporting images, read from left to right then top to bottom.
+  addImage(launch, [-4.45, .65, .26], [8.2, 6.5]);
+  addImage(outreach, [4.45, 2.35, .26], [7.55, 2.8]);
+  addImage(vtvStill, [4.45, -2.3, .26], [7.55, 2.8]);
+
+  [
+    ["PH\u00c1T \u0110\u1ed8NG PHONG TR\u00c0O", -4.45, -2.9, 8.48],
+    ["LAN T\u1eceA TRI TH\u1ee8C S\u1ed0", 4.45, .15, 4.58],
+    ["PH\u00d3NG S\u1ef0 VTV1", 4.45, -4.5, 3.97]
+  ].forEach(([text, x, y, width]) => addTextPanel(text, [x, y, .50], [width, .72], 0, {
+    size: 42, minFontSize: 34, color: "#FFFFFF", background: "#173F5F",
+    border: true, accent: "#D6A84B", borderWidth: 8, weight: 900, wrap: false, align: "center",
+    width: 1500, height: 180, maxWidth: 1420, unlit: true
+  }, imagePanel));
+
+  const controllers = [];
+  if (reportVideo) controllers.push(addSelectedVideoFrame({
+    parent: videoPanel, item: reportVideo, position: [0, .15, .26], size: [10.9, 7.15], renderer,
+    addTextPanel, registerInteractive, requestRender, setVideoActive
+  }));
+
+  return {
+    sync() { controllers.forEach(controller => controller?.sync?.()); },
+    dispose() { controllers.forEach(controller => controller?.dispose?.()); }
+  };
 }
 
 function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, registerInteractive, requestRender, setVideoActive }) {
@@ -683,8 +760,8 @@ function buildCommunityWall({ root, renderer, addTextPanel, registerArtifact, re
   createInternationalTopicSign({ addTextPanel, parent: wall, text: GOC1_TEXT.wallC, position: [0, 19.54, .06] });
   const board = SectionPanel(wall, { position: [0, 10.2, .2], size: [32.5, 12.2] });
   return addSelectedMediaGrid({
-    board, items: selectedMedia("community"), cols: 3, cardSize: [8.35, 2.8],
-    stepX: 10.25, stepY: 3.45, renderer, addTextPanel, registerArtifact,
+    board, items: selectedMedia("community"), cols: 5, cardSize: [5.35, 4.25],
+    stepX: 6.25, stepY: 5.15, renderer, addTextPanel, registerArtifact,
     registerInteractive, requestRender, setVideoActive
   });
 }

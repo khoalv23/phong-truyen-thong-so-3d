@@ -105,23 +105,23 @@
           <button id="book-next-page" type="button" aria-label="Trang sau">›</button>
         </div>
       </div>
-      <div id="modal-image-wrap" class="modal-image-wrap">
-        <img id="modal-image" class="modal-image" src="" alt="">
-      </div>
-      <div id="modal-info" class="modal-info">
-        <h3 id="modal-title"></h3>
-        <dl>
-          <dt>Mô tả</dt>
-          <dd id="modal-description"></dd>
-          <dt>Nhóm nội dung</dt>
-          <dd id="modal-year"></dd>
-          <dt>Nguồn tư liệu</dt>
-          <dd id="modal-source"></dd>
-        </dl>
+      <div id="modal-info" class="modal-artifact-view">
+        <header class="modal-heading">
+          <h3 id="modal-title"></h3>
+        </header>
+        <div class="modal-body">
+  <div id="modal-image-wrap" class="modal-image-wrap">
+    <img id="modal-image" class="modal-image" src="" alt="">
+  </div>
+  <aside class="modal-copy">
+    <div class="modal-copy-label">Mô tả</div>
+    <p id="modal-description" class="modal-description"></p>
+  </aside>
+        </div>
         <div id="modal-page-controls" class="modal-page-controls" hidden>
-          <button id="modal-prev-page" type="button">‹</button>
+          <button id="modal-prev-page" type="button" aria-label="Ảnh trước">‹</button>
           <span id="modal-page-indicator"></span>
-          <button id="modal-next-page" type="button">›</button>
+          <button id="modal-next-page" type="button" aria-label="Ảnh tiếp theo">›</button>
         </div>
       </div>
     </div>
