@@ -173,19 +173,9 @@ export const GOC1_SELECTED_MEDIA=[
   {
     "id": "goc1-selected-20",
     "number": 20,
-    "title": "Mùa hè xanh 2024",
-    "caption": "Tư liệu ghi lại các hoạt động tình nguyện vì cộng đồng trong khuôn khổ Chiến dịch Mùa hè xanh năm 2024.",
-    "displayPath": "./image_v2/Chuyển đổi số trong công tác đoàn/20.jpg",
-    "extension": ".jpg",
-    "mediaType": "image",
-    "zone": "community"
-  },
-  {
-    "id": "goc1-selected-21",
-    "number": 21,
-    "title": "Mùa hè xanh 2025",
-    "caption": "Hình ảnh giới thiệu hoạt động của sinh viên tình nguyện trong Chiến dịch Mùa hè xanh năm 2025.",
-    "displayPath": "./image_v2/Chuyển đổi số trong công tác đoàn/21.JPG",
+    "title": "Hội nghị triển khai phong trào “Bình dân học vụ số” và Chiến dịch “45 ngày đêm hỗ trợ hoạt động chuyển đổi số”",
+    "caption": "Hội nghị được tổ chức tại Yên Lãng, Mê Linh, Hà Nội vào năm 2025 nhằm triển khai phong trào “Bình dân học vụ số” và Chiến dịch “45 ngày đêm hỗ trợ hoạt động chuyển đổi số”, góp phần đưa kiến thức và kỹ năng số đến gần hơn với cộng đồng.",
+    "displayPath": "./image_v2/Chuyển đổi số trong công tác đoàn/24.jpg",
     "extension": ".jpg",
     "mediaType": "image",
     "zone": "community"

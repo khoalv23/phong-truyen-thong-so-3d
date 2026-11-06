@@ -6,8 +6,8 @@ import { createInternationalTopicSign } from "../core/international-topic-sign.j
 
 const GROUP = "Góc 2 · Đổi mới sáng tạo – Khởi nghiệp";
 const WALLS = [
-  { section: "research", title: "NGHIÊN CỨU KHOA HỌC", position: [-17.34, 0, 60.5], rotation: Math.PI / 2, cols: 5, size: [5.45, 4.15], step: [6.25, 5.3] },
-  { section: "startup", title: "KHỞI NGHIỆP SÁNG TẠO", position: [0, 0, 77.22], rotation: Math.PI, editorial: true },
+  { section: "research", title: "SÁNG TẠO KHOA HỌC", position: [-17.34, 0, 60.5], rotation: Math.PI / 2, cols: 4, size: [6.65, 4.15], step: [7.55, 5.3] },
+  { section: "startup", title: "DỰ ÁN KHỞI NGHIỆP", position: [0, 0, 77.22], rotation: Math.PI, editorial: true },
   { section: "training", title: "RÈN LUYỆN NGHIỆP VỤ", position: [17.34, 0, 60.5], rotation: -Math.PI / 2, cols: 3, size: [8.55, 4.15], step: [10.25, 5.3] }
 ];
 

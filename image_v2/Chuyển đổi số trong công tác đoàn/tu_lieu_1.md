@@ -29,3 +29,5 @@
 ## 22: Đoàn phường Cầu Giấy
 ## 23: TUỔI TRẺ KHOA LÝ LUẬN CHÍNH TRỊ - GIÁO DỤC CUNG DÂN CÙNG TUỔI TRẺ TRƯỜNG ĐẠI HỌC SƯ PHẠM HÀ NỘI LAN TỎA TINH THẦN CỐNG HIẾN TẠI CHIẾN DỊCH TÌNH NGUYỆN HÈ NĂM 2026 Ở PHÚ THỌ
 Phát huy tinh thần xung kích và tri thức của tuổi trẻ sư phạm, Đội tình nguyện “Trí thức trẻ đồng hành cùng địa phương” do Trường Đại học Sư phạm Hà Nội tổ chức, giao Liên chi đoàn Khoa Lý luận chính trị - Giáo dục công dân chủ trì đã hoàn thành xuất sắc chuỗi hoạt động ý nghĩa tại xã Tân Lạc, tỉnh Phú Thọ.
+## 24: Hội nghị triển khai phong trào "Bình dân học vụ số" và Chiến dịch "45 ngày đêm hỗ trợ hoạt động chuyển đổi số"
+Năm 2025, Yên Lãng, Mê Linh, Hà Nội
